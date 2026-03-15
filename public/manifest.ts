@@ -2,10 +2,10 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Kore - Engineering & Consulting",
-    short_name: "Kore",
+    name: "NAGAN Planner",
+    short_name: "NAGAN Planner",
     description:
-      "Aplicación plantilla para servicios de ingeniería y consultoría tecnológica, con enfoque en desarrollo web, móvil y soluciones personalizadas.",
+      "Aplicación para iglesias, servicios y gestión de actividades.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

@@ -27,19 +27,19 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Kore - Engineering & Consulting",
+  title: "NAGAN Planner",
   description:
-    "Aplicación plantilla para servicios de ingeniería y consultoría tecnológica.",
+    "Aplicación para iglesias, servicios y gestión de actividades.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Kore",
+    title: "NAGAN Planner",
   },
   formatDetection: {
     telephone: false,
   },
   icons: {
-    apple: "/apple-touch-icon.png",
+    apple: "/favicon.ico",
   },
 };
 
