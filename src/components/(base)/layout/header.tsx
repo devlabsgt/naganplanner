@@ -51,14 +51,14 @@ export default function Header() {
               href={user ? "/kore" : "/"}
               className="flex items-center h-full py-2 group"
             >
-            <div className="flex items-center gap-4">
-              <img
-                src="/icon.png"
-                alt="Nagan Planner Logo"
-                className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-xl border border-white/10 shadow-sm transition-all group-hover:shadow-[#d6a738]/20 group-hover:border-[#d6a738]/30"
-              />
-              <BrandLogo className="flex" />
-            </div>
+              <div className="flex items-center gap-4">
+                <img
+                  src="/icon.png"
+                  alt="Nagan Planner Logo"
+                  className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-xl border border-white/10 shadow-sm transition-all group-hover:shadow-[#d6a738]/20 group-hover:border-[#d6a738]/30"
+                />
+                <BrandLogo className="flex" />
+              </div>
             </Link>
           </div>
 
@@ -171,8 +171,16 @@ export default function Header() {
                 transition={{ duration: 0.4 }}
                 className="text-center space-y-1 pt-4"
               >
+                <p className="text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5">
+                  <span className="opacity-40 flex items-center gap-1">
+                    <AuroraText variant="gold">©️</AuroraText> 2026
+                  </span>
+                  <AuroraText variant="gold">Nagan</AuroraText>
+                  <AuroraText variant="silver">Planner</AuroraText>
+                  <span className="opacity-40">™️</span>
+                </p>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
-                  © 2026 CERMADSAPP
+                  Sistema de Gestión Ministerial Modular
                 </p>
                 <p className="text-[10px] font-bold uppercase tracking-widest">
                   Powered by{" "}
@@ -182,7 +190,7 @@ export default function Header() {
                     rel="noopener noreferrer"
                     className="hover:underline cursor-pointer transition-all inline-block"
                   >
-                    <AuroraText>Kore.dev</AuroraText>
+                    <AuroraText>Kore | ingeniería de software</AuroraText>
                   </a>
                 </p>
               </motion.div>

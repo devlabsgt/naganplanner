@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -11,14 +10,21 @@ import { cn } from "@/lib/utils";
 interface ModuleCardProps {
   modulo: Modulo;
   isLoading?: boolean;
+  loadingModule?: string | null;
+  setLoadingModule?: (id: string | null) => void;
 }
 
-export function ModuleCard({ modulo, isLoading = false }: ModuleCardProps) {
+export function ModuleCard({ 
+  modulo, 
+  isLoading = false,
+  loadingModule,
+  setLoadingModule
+}: ModuleCardProps) {
   const router = useRouter();
-  const [navigating, setNavigating] = useState(false);
+  const navigating = loadingModule === modulo.id;
 
   const handleClick = () => {
-    setNavigating(true);
+    if (setLoadingModule) setLoadingModule(modulo.id);
     router.push(modulo.ruta as any);
   };
 
@@ -41,17 +47,17 @@ export function ModuleCard({ modulo, isLoading = false }: ModuleCardProps) {
       whileTap={{ scale: 0.99 }}
       transition={{ duration: 0.15, ease: "easeOut" }}
       className={cn(
-        "group relative flex items-center gap-4 p-4 rounded-2xl border border-border/40",
+        "group relative flex items-center gap-6 p-6 rounded-2xl border border-border/40",
         "bg-card/40 hover:bg-card/70 backdrop-blur-sm shadow-sm hover:shadow-md",
         "transition-colors duration-200 cursor-pointer overflow-hidden",
         navigating && "opacity-70 pointer-events-none"
       )}
     >
       {/* Ícono animado */}
-      <div className="w-14 h-14 rounded-xl bg-muted/30 flex items-center justify-center shrink-0 group-hover:bg-muted/50 transition-colors">
+      <div className="w-16 h-16 rounded-xl bg-muted/30 flex items-center justify-center shrink-0 group-hover:bg-muted/50 transition-colors">
         <AnimatedIcon
           iconKey={modulo.iconKey}
-          className="w-10 h-10"
+          className="w-12 h-12"
           primaryColor={modulo.color?.primaryColor}
           secondaryColor={modulo.color?.secondaryColor}
         />
@@ -59,10 +65,10 @@ export function ModuleCard({ modulo, isLoading = false }: ModuleCardProps) {
 
       {/* Texto */}
       <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-sm text-foreground leading-tight truncate">
+        <h3 className="font-semibold text-base text-foreground leading-tight">
           {modulo.titulo}
         </h3>
-        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-snug">
+        <p className="text-xs text-muted-foreground mt-1 leading-snug">
           {modulo.descripcion}
         </p>
       </div>
@@ -76,12 +82,12 @@ export function ModuleCard({ modulo, isLoading = false }: ModuleCardProps) {
         <div
           className={cn(
             "flex items-center gap-1 overflow-hidden",
-            "max-w-0 opacity-0 group-hover:max-w-[80px] group-hover:opacity-100",
-            "transition-all duration-200 ease-out text-primary text-xs font-medium whitespace-nowrap"
+            "max-w-0 opacity-0 group-hover:max-w-[100px] group-hover:opacity-100",
+            "transition-all duration-200 ease-out text-primary text-sm font-medium whitespace-nowrap"
           )}
         >
           <span>Abrir</span>
-          <ArrowRight size={12} />
+          <ArrowRight size={14} />
         </div>
       </motion.div>
     </motion.div>

@@ -13,6 +13,7 @@ export interface Modulo {
     secondaryColor?: string;
   };
   categoria: 'Planificación' | 'Administración' | 'Recursos Humanos';
+  subgrupo: 'Organización Ministerial' | 'Planificación de Servicio' | 'Formación Espiritual';
   // Si está vacío, lo pueden ver todos los roles. Si es 'TODOS', también.
   rolesPermitidos: Rol[] | 'TODOS';
   // Si es true, solo los usuarios con estado de jefe pueden verlo.
@@ -26,11 +27,9 @@ export const TODOS_LOS_MODULOS: Modulo[] = [
     titulo: 'Planificador de Actividades',
     descripcion: 'Gestión de actividades, grupos y asignaciones.',
     ruta: '/kore/planificador',
-    iconKey: 'ctuxkbtj',
-    color: {
-      primaryColor: '#f59e0b', // amber-500
-    },
+    iconKey: 'tqldjjaa',
     categoria: 'Planificación',
+    subgrupo: 'Planificación de Servicio',
     rolesPermitidos: 'TODOS',
     soloJefe: true,
   },
@@ -40,10 +39,8 @@ export const TODOS_LOS_MODULOS: Modulo[] = [
     descripcion: 'Gestión de actividades del departamento de alabanza.',
     ruta: '/kore/planificador/alabanza',
     iconKey: 'jlhrsjqp',
-    color: {
-      primaryColor: '#3b82f6', // blue-500
-    },
     categoria: 'Planificación',
+    subgrupo: 'Planificación de Servicio',
     rolesPermitidos: 'TODOS',
   },
   {
@@ -52,10 +49,8 @@ export const TODOS_LOS_MODULOS: Modulo[] = [
     descripcion: 'Gestión de actividades del departamento de danza.',
     ruta: '/kore/planificador/danza',
     iconKey: 'hwszmalz',
-    color: {
-      primaryColor: '#ec4899', // pink-500
-    },
     categoria: 'Planificación',
+    subgrupo: 'Planificación de Servicio',
     rolesPermitidos: 'TODOS',
   },
   {
@@ -64,10 +59,8 @@ export const TODOS_LOS_MODULOS: Modulo[] = [
     descripcion: 'Gestión de actividades del departamento de multimedia.',
     ruta: '/kore/planificador/multimedia',
     iconKey: 'rhrmfnhf',
-    color: {
-      primaryColor: '#06b6d4', // cyan-500
-    },
     categoria: 'Planificación',
+    subgrupo: 'Planificación de Servicio',
     rolesPermitidos: 'TODOS',
   },
   {
@@ -76,10 +69,8 @@ export const TODOS_LOS_MODULOS: Modulo[] = [
     descripcion: 'Estructura organizacional, departamentos y puestos.',
     ruta: '/kore/admin',
     iconKey: 'giblkgwf',
-    color: {
-      primaryColor: '#a855f7', // purple-500
-    },
     categoria: 'Administración',
+    subgrupo: 'Organización Ministerial',
     rolesPermitidos: ['admin', 'super'],
   },
   {
@@ -88,10 +79,8 @@ export const TODOS_LOS_MODULOS: Modulo[] = [
     descripcion: 'Vista general de todas las actividades de todos los departamentos.',
     ruta: '/kore/planificador/admin',
     iconKey: 'dkvquwgz',
-    color: {
-      primaryColor: '#6366f1', // indigo-500
-    },
     categoria: 'Administración',
+    subgrupo: 'Organización Ministerial',
     rolesPermitidos: ['admin', 'super', 'rrhh'],
   },
   {
@@ -100,10 +89,8 @@ export const TODOS_LOS_MODULOS: Modulo[] = [
     descripcion: 'Gestión de actividades del ministerio de danza.',
     ruta: '/kore/planificador/escolas',
     iconKey: 'nhkwajfc',
-    color: {
-      primaryColor: '#53be0bff', // green-500
-    },
     categoria: 'Planificación',
+    subgrupo: 'Formación Espiritual',
     rolesPermitidos: 'TODOS',
   },
 ];
