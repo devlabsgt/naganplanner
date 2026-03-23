@@ -3,14 +3,15 @@
 import { useState, useMemo } from 'react';
 import {
   Plus, Search, Calendar as CalendarIcon,
-  SearchX, LayoutGrid, ArrowLeft, Building2, ChevronDown, ChevronRight, Users, Filter, ClipboardList
+  SearchX, LayoutGrid, ArrowLeft, Building2, ChevronDown, ChevronRight, Users, Filter, ClipboardList, Music
 } from 'lucide-react';
 import { Planificador, Perfil } from './lib/zod';
 import { useGestorPlanificador } from './lib/hooks';
 import PlanificadorItem from './PlanificadorItem';
 import NuevoPlanificador from './modals/NuevoPlanificador';
 import GestorEquipos from './modals/GestorEquipos';
-import RegistroSustituciones from './modals/RegistroSustituciones'; // <--- Importamos Historial
+import RegistroSustituciones from './modals/RegistroSustituciones'; // <--- Historial
+import RegistroAlabanzas from './modals/RegistroAlabanzas'; // <--- Alabanzas
 
 type DeptoEquipo = {
   id: string;
@@ -85,6 +86,7 @@ export default function PlanificadorList({ initialData, tipoVista, modulo }: Pro
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGestorEquiposOpen, setIsGestorEquiposOpen] = useState(false);
   const [isRegistroOpen, setIsRegistroOpen] = useState(false); // <--- Historial
+  const [isAlabanzasOpen, setIsAlabanzasOpen] = useState(false); // <--- Alabanzas
 
   const [expandedDeptos, setExpandedDeptos] = useState<Record<string, boolean>>({ 'directas': true });
   const toggleDepto = (id: string) => setExpandedDeptos(prev => ({ ...prev, [id]: !prev[id] }));
@@ -259,6 +261,15 @@ export default function PlanificadorList({ initialData, tipoVista, modulo }: Pro
                   title="Registro de Sustituciones"
                 >
                   <ClipboardList size={20} />
+                </button>
+
+                {/* BOTÓN BANCO ALABANZAS */}
+                <button
+                  onClick={() => setIsAlabanzasOpen(true)}
+                  className="bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 p-3 rounded-2xl transition-colors border border-purple-100 dark:border-purple-800 shrink-0"
+                  title="Banco de Alabanzas"
+                >
+                  <Music size={20} />
                 </button>
 
                 {/* BOTÓN GESTOR DE EQUIPOS */}
@@ -465,6 +476,12 @@ export default function PlanificadorList({ initialData, tipoVista, modulo }: Pro
       <RegistroSustituciones
         isOpen={isRegistroOpen}
         onClose={() => setIsRegistroOpen(false)}
+      />
+
+      {/* MODAL BANCO ALABANZAS */}
+      <RegistroAlabanzas
+        isOpen={isAlabanzasOpen}
+        onClose={() => setIsAlabanzasOpen(false)}
       />
     </div>
   );

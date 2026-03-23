@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { 
   Edit2, Trash2, ChevronDown, Calendar, User, Users,
   Clock, AlertCircle, Ban, Mail, Paperclip, Youtube, X,
-  Star
+  Star, Music
 } from 'lucide-react';
 import { Planificador, Perfil } from './lib/zod';
 import { usePlanificadorLogic } from './lib/hooks'; 
@@ -13,6 +13,8 @@ import FilaIntegrante from './FilaIntegrante';
 import PlanificadorChecklist from './PlanificadorChecklist'; 
 import GestorArchivos from './modals/GestorArchivos';
 import GestorVideo from './modals/GestorVideo';
+import GestorAlabanzaActividad from './modals/GestorAlabanzaActividad';
+import ModalRepertorioActividad from './modals/ModalRepertorioActividad';
 
 interface Props {
   planificador: Planificador; 
@@ -35,6 +37,8 @@ export default function PlanificadorItem({
   
   const [forceShowFiles, setForceShowFiles] = useState(false);
   const [forceShowVideos, setForceShowVideos] = useState(false);
+  const [forceShowAlabanzas, setForceShowAlabanzas] = useState(false);
+  const [modalRepertorioOpen, setModalRepertorioOpen] = useState(false);
 
   const { permisos, datos, acciones } = usePlanificadorLogic(
     planificador, 
@@ -94,14 +98,17 @@ export default function PlanificadorItem({
     i => i.usuario_id === usuarioActualId && i.invitación !== false
   );
   const puedeHacerCheck = permisos.puedeEditar || esMiembroConfirmado;
-  const puedeGestionarContenido = isJefe || permisos.esCreador;
+  const esEncargadoActividad = datos.encargados.some(i => i.usuario_id === usuarioActualId);
+  const puedeGestionarContenido = isJefe || esEncargadoActividad || permisos.esCreador;
 
   const checklistSeguro = planificador.checklist ?? [];
   const adjuntosSeguros = planificador.archivos_pdf ?? [];
   const videosSeguros = planificador.videos_url ?? [];
+  const alabanzasSeguras = (planificador as any).alabanzas ?? [];
 
   const showFiles = adjuntosSeguros.length > 0 || forceShowFiles;
   const showVideos = videosSeguros.length > 0 || forceShowVideos;
+  const showAlabanzas = alabanzasSeguras.length > 0 || forceShowAlabanzas;
 
   return (
     <>
@@ -236,6 +243,71 @@ export default function PlanificadorItem({
                       </span>
                     </button>
                   )}
+                  {!showAlabanzas && (
+                    <button 
+                      onClick={() => setForceShowAlabanzas(true)}
+                      className="group flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-gray-300 dark:border-[#2a2624] hover:border-[#d6a738] dark:hover:border-[#d6a738] hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-all duration-200 active:scale-95 hover:-translate-y-0.5 hover:shadow-sm sm:col-span-2"
+                    >
+                      <Music size={18} className="text-gray-400 group-hover:text-[#d6a738] transition-colors group-hover:scale-110" />
+                      <span className="text-sm font-bold text-gray-500 dark:text-gray-400 group-hover:text-[#d6a738] dark:group-hover:text-[#d6a738]">
+                        Añadir Repertorio Musical
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {showAlabanzas && (
+                <div className="relative animate-in fade-in slide-in-from-top-2 flex flex-col gap-3 p-5 bg-gradient-to-br from-white to-gray-50 dark:from-[#131211] dark:to-[#0f0e0d] rounded-2xl border border-[#d5cec2]/50 dark:border-[#2a2624]/50 shadow-sm mt-4">
+                   {forceShowAlabanzas && alabanzasSeguras.length === 0 && (
+                      <button 
+                        onClick={() => setForceShowAlabanzas(false)}
+                        className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all z-10 active:scale-90"
+                        title="Quitar sección de alabanza"
+                      >
+                        <X size={16} />
+                      </button>
+                   )}
+                   
+                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                     <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 flex items-center justify-center bg-gradient-to-br from-[#d6a738] to-[#c08e2a] text-white rounded-xl shadow-lg shadow-[#d6a738]/20">
+                          <Music size={24} />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-lg text-[#4a3f36] dark:text-[#f4ebc3] tracking-tight">Repertorio Musical</h4>
+                          <p className="text-xs font-bold text-[#847563] uppercase tracking-widest mt-0.5">{alabanzasSeguras.length} CANTOS PROGRAMADOS</p>
+                        </div>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       {alabanzasSeguras.length > 0 && (
+                         <button 
+                           onClick={() => setModalRepertorioOpen(true)}
+                           className="flex-1 sm:flex-none px-4 py-2 bg-neutral-900 text-white dark:bg-[#f4ebc3] dark:text-[#2a2624] rounded-xl text-[10px] font-black uppercase tracking-widest transition-transform active:scale-95 shadow-md flex justify-center items-center"
+                         >
+                           Ver Repertorio
+                         </button>
+                       )}
+                       {puedeGestionarContenido && (
+                         <div className="flex-1 sm:flex-none">
+                           <GestorAlabanzaActividad 
+                              actividadId={planificador.id}
+                              alabanzasIniciales={alabanzasSeguras}
+                              readonly={!puedeGestionarContenido}
+                           />
+                         </div>
+                       )}
+                     </div>
+                   </div>
+
+                   <ModalRepertorioActividad 
+                      isOpen={modalRepertorioOpen}
+                      onClose={() => setModalRepertorioOpen(false)}
+                      songs={alabanzasSeguras}
+                      actividadId={planificador.id}
+                      integrantes={planificador.integrantes}
+                      puedeGestionar={puedeGestionarContenido}
+                   />
                 </div>
               )}
 

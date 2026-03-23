@@ -23,9 +23,9 @@ export async function checkIsJefe(supabase: any, userId: string): Promise<boolea
 
   // Normalizar el rol para que sea insensible a mayúsculas/minúsculas
   const userRole = (profile?.rol || '').toUpperCase();
-  const esSuperAdmin = userRole === 'SUPER';
+  const esAutorizado = userRole === 'SUPER' || userRole === 'ADMIN';
 
-  return esJefeOperativo || esSuperAdmin;
+  return esJefeOperativo || esAutorizado;
 }
 
 export async function obtenerDatosPlanificador(
@@ -136,6 +136,11 @@ export async function obtenerDatosPlanificador(
         invitación,
         justificación,
         rol
+      ),
+      act_actividades_alabanzas (
+        alabanza_id,
+        id_director,
+        act_banco_alabanzas (*)
       )
     `)
     .order('due_date', { ascending: true });
@@ -169,10 +174,21 @@ export async function obtenerDatosPlanificador(
       };
     });
 
+    const alabanzasMapeadas = (act.act_actividades_alabanzas || []).map((rel: any) => {
+      const dbSong = rel.act_banco_alabanzas;
+      const directorPerfil = rel.id_director ? perfilesMap.get(rel.id_director) : null;
+      return {
+        ...dbSong,
+        director_id: rel.id_director,
+        director_nombre: directorPerfil?.nombre || null
+      };
+    });
+
     return {
       ...act,
       creator: { nombre: creador?.nombre || 'Desconocido' },
-      integrantes: integrantesMapeados
+      integrantes: integrantesMapeados,
+      alabanzas: alabanzasMapeadas
     };
   });
 

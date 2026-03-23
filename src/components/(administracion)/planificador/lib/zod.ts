@@ -59,6 +59,13 @@ export const planificadorSchema = z.object({
   
   videos_url: z.array(videoSchema).nullable().optional().default([]),
 
+  alabanzas: z.array(z.object({
+    id: z.string().uuid(),
+    nombre: z.string(),
+    tipo: z.string(),
+    tonalidad: z.string().nullable().optional()
+  })).nullable().optional().default([]),
+
   creator: z.object({
     nombre: z.string()
   }).optional(),
@@ -87,6 +94,13 @@ export const planificadorFormSchema = z.object({
   checklist: z.array(checklistItemSchema).optional().default([]),
   
   videos_url: z.array(videoSchema).optional().default([]),
+
+  alabanzas: z.array(z.object({
+    id: z.string().uuid(),
+    nombre: z.string(),
+    tipo: z.string(),
+    tonalidad: z.string().nullable().optional()
+  })).optional().default([]),
 
   integrantes: z.array(integranteFormSchema)
     .min(1, "Debes agregar al menos un integrante al planificador")

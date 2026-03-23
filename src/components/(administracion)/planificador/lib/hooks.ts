@@ -22,7 +22,8 @@ import {
   eliminarPlantillaEquipo,
   cargarMiembrosDePlantilla,
   obtenerRolesExistentes,
-  obtenerRegistroSustituciones
+  obtenerRegistroSustituciones,
+  sincronizarRepertorioActividad
 } from "./actions";
 
 import {
@@ -143,6 +144,11 @@ export const usePlanificadorMutations = () => {
     borrarVideo: mutationBorrarVideo,
     agregarAdjunto: mutationAgregarAdjunto,
     borrarAdjunto: mutationBorrarAdjunto,
+
+    sincronizarRepertorio: useMutation({
+      mutationFn: ({ id, alabanzasIds }: { id: string, alabanzasIds: string[] }) => sincronizarRepertorioActividad(id, alabanzasIds),
+      onSuccess: invalidar,
+    }),
     isLoading: guardar.isPending || eliminar.isPending || responderInvitacion.isPending ||
       darDeBaja.isPending || sustituirMiembro.isPending || updateChecklist.isPending ||
       mutationAgregarVideo.isPending || mutationAgregarAdjunto.isPending
