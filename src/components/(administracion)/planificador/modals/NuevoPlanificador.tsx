@@ -12,8 +12,6 @@ import { SeccionChecklist } from './SeccionChecklist';
 import { SeccionEquipo, IntegranteUI } from './SeccionEquipo';
 import GestorEquipos from './GestorEquipos';
 
-// ... eliminamos la interface de arriba y la unificamos abajo
-
 const MODULOS_DISPONIBLES = [
   { value: 'alabanza', label: 'Alabanza' },
   { value: 'danza-damas', label: 'Danza Damas' },
@@ -60,12 +58,8 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
   const isModuloLocked = modulo && modulo !== 'todas';
   const isAdminGlobalView = tipoVista === 'todas';
   const isReunionView = modulo === 'reunion';
-  // Tanto la vista global ("todas") como el módulo específico de reunión
-  // fuerzan el modo reunión: se auto-asigna el módulo y el estado.
   const isReunionMode = isAdminGlobalView || isReunionView;
 
-  // En modo reunión, solo mostramos opciones de reunión/ensayo.
-  // En el resto (alabanza, danza, etc.), excluimos reunión.
   const modulosVisibles = MODULOS_DISPONIBLES.filter(m => isReunionMode ? m.value === 'reunion' : m.value !== 'reunion');
   const serviciosVisibles = TIPOS_SERVICIO.filter(t => isReunionMode ? (t.value === 'reunion' || t.value === 'ensayo') : t.value !== 'reunion');
 
@@ -83,8 +77,59 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
 
   const [isGestorOpen, setIsGestorOpen] = useState(false);
   const [isRandomLoading, setIsRandomLoading] = useState(false);
-  // Estado para recordar el último índice aleatorio y evitar repeticiones
   const [lastRandomIndex, setLastRandomIndex] = useState<number | null>(null);
+
+  // --- BLOQUEO DE SCROLL DEFINITIVO (PC + iOS Safari) ---
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const scrollY = window.scrollY;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    // 1. Guardar estilos originales para restaurarlos al cerrar
+    const htmlStyle = document.documentElement.style.overflow;
+    const bodyStyle = document.body.style.overflow;
+    const bodyPos = document.body.style.position;
+    const bodyTop = document.body.style.top;
+    const bodyWidth = document.body.style.width;
+    const bodyPadding = document.body.style.paddingRight;
+
+    // 2. Aplicar bloqueo estricto (En iOS bloquear el body NO basta, hay que bloquear el html)
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    // 3. Prevenir "scroll chaining" (el rebote elástico de iOS)
+    const handleTouchMove = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      // Si el usuario intenta hacer scroll tocando fuera del área permitida (ej. el fondo oscuro), lo bloqueamos
+      if (!target.closest('.modal-scroll-area')) {
+        if (e.cancelable) e.preventDefault();
+      }
+    };
+
+    // { passive: false } es OBLIGATORIO en Safari para que preventDefault() funcione en eventos táctiles
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      // Restaurar todo exactamente como estaba
+      document.documentElement.style.overflow = htmlStyle;
+      document.body.style.overflow = bodyStyle;
+      document.body.style.position = bodyPos;
+      document.body.style.top = bodyTop;
+      document.body.style.width = bodyWidth;
+      document.body.style.paddingRight = bodyPadding;
+
+      document.removeEventListener('touchmove', handleTouchMove);
+      window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
 
   // --- FILTRO DE USUARIOS POR GÉNERO ---
   const usuariosDisponibles = useMemo(() => {
@@ -102,14 +147,12 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
   // --- ORDEN DE JERARQUÍA PARA EL SELECTOR ---
   const departamentosOrdenados = useMemo(() => {
     if (!departamentosEquipo || departamentosEquipo.length === 0) return [];
-    
-    // Convertir el array de departamentos en un mapa para búsqueda rápida
+
     const mapa = new Map<string, any>();
     departamentosEquipo.forEach(d => {
       mapa.set(d.id, { ...d, children: [] });
     });
 
-    // Separar en raíces (padres principales) e hijos
     const roots: any[] = [];
     mapa.forEach(d => {
       if (d.parent_id && mapa.has(d.parent_id)) {
@@ -120,8 +163,7 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
     });
 
     const flattened: (DeptoEquipo & { level: number })[] = [];
-    
-    // Función recursiva para aplanar respetando la jerarquía
+
     const flatten = (node: any, level: number) => {
       flattened.push({ ...node, level });
       if (node.children) {
@@ -129,26 +171,10 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
       }
     };
 
-    // Comenzar aplanar desde las raíces
     roots.forEach(root => flatten(root, 0));
 
     return flattened;
   }, [departamentosEquipo]);
-
-  // BLOQUEO DE SCROLL
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-    };
-  }, [isOpen]);
 
   // CARGA DE DATOS
   useEffect(() => {
@@ -249,20 +275,16 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
     setIsRandomLoading(true);
     await new Promise(resolve => setTimeout(resolve, 600));
 
-    // --- LÓGICA ANTI-REPETICIÓN ---
     let randomIndex;
 
     if (plantillas.length === 1) {
-      // Si solo hay 1 equipo, no hay opción de cambiar
       randomIndex = 0;
     } else {
-      // Si hay más de 1, buscamos uno diferente al anterior
       do {
         randomIndex = Math.floor(Math.random() * plantillas.length);
       } while (randomIndex === lastRandomIndex);
     }
 
-    // Guardamos el índice actual para la próxima vez
     setLastRandomIndex(randomIndex);
 
     const randomTemplate = plantillas[randomIndex];
@@ -312,70 +334,105 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-        <div className="bg-white dark:bg-[#1a1a1a] w-full max-w-[1000px] xl:max-w-[1200px] rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 dark:border-neutral-800">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-300 sm:p-4"
+        style={{ touchAction: 'none' }}
+      >
+        <div
+          className="bg-white dark:bg-[#1a1a1a] w-full h-full sm:max-w-7xl sm:h-[90vh] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-0 sm:border border-gray-100 dark:border-neutral-800"
+          style={{ touchAction: 'pan-y' }}
+        >
 
           {/* HEADER */}
-          <div className="px-6 sm:px-8 py-5 border-b border-gray-100 dark:border-neutral-800 flex justify-between items-center bg-white dark:bg-[#1a1a1a]">
-            <div className="flex flex-col gap-1 w-full">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2 whitespace-nowrap">
-                  {isEditing ? <Save className="text-blue-600" size={22} /> : <Sparkles className="text-blue-600" size={22} />}
-                  {isEditing ? 'Editar Actividad' : 'Nueva Actividad'}
-                </h2>
+          <div className="px-6 sm:px-8 py-4 sm:py-5 border-b border-gray-100 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 bg-white dark:bg-[#1a1a1a]">
 
-                <div className="flex items-center gap-2 ml-auto sm:ml-4 flex-wrap justify-end">
-                  {/* Si es Reunión Mode (Vista Administrador TODAS o módulo Reunión), mostramos badge. Si no, selectores. */}
-                  {isReunionMode ? (
-                    <div className="animate-in fade-in flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      <Tag size={14} className="text-blue-500" />
-                      <span className="text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-400">Reunión / Evento</span>
+            <div className="flex items-center justify-between sm:justify-start gap-3 flex-1 min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2 whitespace-nowrap shrink-0">
+                {isEditing ? <Save className="text-blue-600" size={20} /> : <Sparkles className="text-blue-600" size={20} />}
+                {isEditing ? 'Editar Actividad' : 'Nueva Actividad'}
+              </h2>
+
+              <button onClick={onClose} className="sm:hidden p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors text-gray-400 shrink-0">
+                <X size={22} />
+              </button>
+
+              {!isReunionMode ? (
+                <div className="hidden sm:flex items-center gap-2 shrink-0">
+                  <div className="relative group h-9 min-w-[120px]">
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 px-3 bg-gray-100 dark:bg-neutral-800 border border-transparent group-hover:border-gray-200 dark:group-hover:border-neutral-700 rounded-lg pointer-events-none transition-all">
+                      <Tag size={13} className="text-gray-400 shrink-0" />
+                      <span className="text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-300 truncate">
+                        {serviciosVisibles.find(t => t.value === selectedStatus)?.label || selectedStatus}
+                      </span>
                     </div>
-                  ) : (
-                    <>
-                      <div className="relative group animate-in fade-in">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                          <Tag size={14} />
-                        </div>
-                        <select
-                          value={selectedStatus}
-                          onChange={(e) => setSelectedStatus(e.target.value as StatusType)}
-                          disabled={guardar.isPending}
-                          className="appearance-none pl-9 pr-8 py-1.5 text-xs font-bold uppercase tracking-wide bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border border-transparent hover:border-gray-300 dark:hover:border-neutral-600 rounded-lg cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-60"
-                        >
-                          {serviciosVisibles.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                        </select>
-                      </div>
-
-                      <div className="relative group animate-in fade-in">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                          <Layers size={14} />
-                        </div>
-                        <select
-                          value={selectedModulo}
-                          onChange={(e) => setSelectedModulo(e.target.value as ModuloType)}
-                          disabled={!!isModuloLocked || guardar.isPending}
-                          className="appearance-none pl-9 pr-8 py-1.5 text-xs font-bold uppercase tracking-wide bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border border-transparent hover:border-gray-300 dark:hover:border-neutral-600 rounded-lg cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-60"
-                        >
-                          {modulosVisibles.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                        </select>
-                      </div>
-                    </>
-                  )}
+                    <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value as StatusType)} disabled={guardar.isPending} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed">
+                      {serviciosVisibles.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="relative group h-9 min-w-[120px]">
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 px-3 bg-gray-100 dark:bg-neutral-800 border border-transparent group-hover:border-gray-200 dark:group-hover:border-neutral-700 rounded-lg pointer-events-none transition-all">
+                      <Layers size={13} className="text-gray-400 shrink-0" />
+                      <span className="text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-300 truncate">
+                        {modulosVisibles.find(m => m.value === selectedModulo)?.label || selectedModulo}
+                      </span>
+                    </div>
+                    <select value={selectedModulo} onChange={(e) => setSelectedModulo(e.target.value as ModuloType)} disabled={!!isModuloLocked || guardar.isPending} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed">
+                      {modulosVisibles.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg shrink-0">
+                  <Tag size={13} className="text-blue-500" />
+                  <span className="text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-400">Reunión / Evento</span>
+                </div>
+              )}
             </div>
-            <button onClick={onClose} className="p-2 ml-3 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors text-gray-400">
+
+            <div className="flex sm:hidden items-center gap-2 w-full">
+              {isReunionMode ? (
+                <div className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg w-full">
+                  <Tag size={13} className="text-blue-500" />
+                  <span className="text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-400">Reunión / Evento</span>
+                </div>
+              ) : (
+                <>
+                  <div className="relative group h-9 flex-1">
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 px-3 bg-gray-100 dark:bg-neutral-800 border border-transparent rounded-lg pointer-events-none">
+                      <Tag size={13} className="text-gray-400 shrink-0" />
+                      <span className="text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-300 truncate">
+                        {serviciosVisibles.find(t => t.value === selectedStatus)?.label || selectedStatus}
+                      </span>
+                    </div>
+                    <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value as StatusType)} disabled={guardar.isPending} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed">
+                      {serviciosVisibles.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="relative group h-9 flex-1">
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 px-3 bg-gray-100 dark:bg-neutral-800 border border-transparent rounded-lg pointer-events-none">
+                      <Layers size={13} className="text-gray-400 shrink-0" />
+                      <span className="text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-300 truncate">
+                        {modulosVisibles.find(m => m.value === selectedModulo)?.label || selectedModulo}
+                      </span>
+                    </div>
+                    <select value={selectedModulo} onChange={(e) => setSelectedModulo(e.target.value as ModuloType)} disabled={!!isModuloLocked || guardar.isPending} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed">
+                      {modulosVisibles.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button onClick={onClose} className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors text-gray-400 shrink-0">
               <X size={22} />
             </button>
           </div>
 
-          {/* CONTENIDO */}
-          <form id="form-comision" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-white dark:bg-[#1a1a1a]">
-
+          {/* CONTENIDO - Añadido overscroll-contain aquí */}
+          <form id="form-comision" onSubmit={handleSubmit} className="modal-scroll-area flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-white dark:bg-[#1a1a1a] overscroll-contain">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-12 h-full">
 
-              {/* COLUMNA IZQUIERDA: GENERAL Y CHECKLIST */}
+              {/* COLUMNA IZQUIERDA */}
               <div className="flex flex-col space-y-8 lg:pr-4">
                 <SeccionGeneral
                   title={title} setTitle={setTitle}
@@ -392,11 +449,10 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
                 )}
               </div>
 
-              {/* COLUMNA DERECHA: ASIGNACIÓN DE MIEMBROS */}
+              {/* COLUMNA DERECHA */}
               {!isEditing && (
                 <div className="flex flex-col space-y-4 lg:pl-6 lg:border-l lg:border-gray-100 dark:lg:border-neutral-800 h-full animate-in fade-in duration-300">
                   <div className="flex flex-col gap-4">
-                    {/* Encabezado: Título */}
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
                         <Users size={16} />
@@ -413,10 +469,7 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
                       </div>
                     </div>
 
-                    {/* Controles de Asignación */}
                     <div className="flex flex-wrap items-center justify-between gap-3 w-full">
-
-                      {/* Switch de Modo */}
                       <div className="flex bg-gray-100 dark:bg-neutral-800 p-1 rounded-xl w-full sm:w-fit border border-gray-200 dark:border-neutral-700">
                         <button
                           type="button"
@@ -432,7 +485,7 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
                         >
                           <Users size={14} /> Equipos
                         </button>
-                        
+
                         {isAdminGlobalView && (
                           <button
                             type="button"
@@ -444,7 +497,6 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
                         )}
                       </div>
 
-                      {/* Botones de Acción (Solo modo EQUIPO) */}
                       {modoAsignacion === 'EQUIPO' && (
                         <div className="flex items-center gap-2 w-full sm:w-auto animate-in fade-in slide-in-from-right-2">
                           <button
@@ -471,7 +523,6 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
                     </div>
                   </div>
 
-                  {/* Renderizado de la lista de integrantes o buscador */}
                   <div className="flex-1 mt-2">
                     {modoAsignacion === 'DEPARTAMENTO' && (
                       <div className="mb-4 p-4 border border-amber-200 dark:border-amber-900/30 bg-amber-50 dark:bg-amber-900/10 rounded-2xl animate-in slide-in-from-top-2">
@@ -484,24 +535,21 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
                           onChange={(e) => {
                             const selectedId = e.target.value;
                             if (!selectedId) return;
-                            
+
                             const deptoSeleccionado = departamentosEquipo.find(d => d.id === selectedId);
                             if (deptoSeleccionado) {
-                              
-                              // Función para obtener IDs de manera recursiva (padre + todos los hijos/subdeptos)
                               const obtenerIdsFamilia = (padreId: string): string[] => {
                                 const hijos = departamentosEquipo.filter(d => d.parent_id === padreId).map(d => d.id);
                                 let todos = [padreId, ...hijos];
                                 hijos.forEach(hijoId => {
-                                  todos = [...todos, ...obtenerIdsFamilia(hijoId).filter(id => id !== hijoId)]; // Evita duplicar el propio hijo
+                                  todos = [...todos, ...obtenerIdsFamilia(hijoId).filter(id => id !== hijoId)];
                                 });
                                 return todos;
                               };
 
                               const todosLosIds = obtenerIdsFamilia(selectedId);
-                              
-                              // Recolectar todos los miembros únicos de toda la jerarquía
                               const miembrosTotalesIds = new Set<string>();
+
                               departamentosEquipo
                                 .filter(d => todosLosIds.includes(d.id))
                                 .forEach(d => {
@@ -519,27 +567,23 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
                                   rol: '',
                                   is_new: true
                                 }));
-                              
+
                               if (nuevos.length > 0) {
                                 setIntegrantes([...integrantes, ...nuevos]);
-                                Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 }).fire({ 
-                                  icon: 'success', 
+                                Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 }).fire({
+                                  icon: 'success',
                                   title: `¡${nuevos.length} miembros añadidos!`,
-                                  text: "Incluyendo sub-departamentos (si aplica)."
                                 });
                               } else {
                                 Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 }).fire({ icon: 'info', title: 'Todos ya están en la lista' });
                               }
                             }
-                            // Restablecer el select
                             e.target.value = "";
                           }}
                         >
                           <option value="" disabled hidden>Elige un departamento de la lista...</option>
                           {departamentosOrdenados.map(d => {
-                            // Crear un prefijo visual basado en el nivel de profundidad
                             const prefix = d.level > 0 ? "— ".repeat(d.level) + " " : "";
-                            
                             return (
                               <option key={d.id} value={d.id}>
                                 {prefix}{d.nombre.toUpperCase()}
@@ -576,18 +620,15 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
               </button>
             )}
 
-            <div className="flex gap-3 ml-auto w-full sm:w-auto">
-              <button type="button" onClick={onClose} className="flex-1 sm:flex-none px-6 py-2.5 text-gray-600 hover:bg-white dark:text-gray-300 dark:hover:bg-neutral-800 border border-transparent hover:border-gray-200 dark:hover:border-neutral-700 rounded-xl font-bold text-sm transition-all">
-                Cancelar
-              </button>
+            <div className="flex justify-center w-full">
               <button
                 type="submit"
                 form="form-comision"
                 disabled={guardar.isPending || (integrantes.length === 0 && !isEditing)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-xl shadow-blue-500/20 disabled:opacity-70 transition-all transform active:scale-95"
+                className="flex items-center justify-center gap-2 px-12 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-xl shadow-blue-500/20 disabled:opacity-70 transition-all transform active:scale-95 min-w-[160px]"
               >
                 {guardar.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                {isEditing ? 'Guardar Cambios' : 'Crear Actividad'}
+                {isEditing ? 'Guardar' : 'Crear'}
               </button>
             </div>
           </div>

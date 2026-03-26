@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Search, Users, Plus, Crown, Trash2, Briefcase, UserCircle } from 'lucide-react';
 import { Perfil } from '../lib/zod';
 import { useRolesSugeridos } from '../lib/hooks';
+import Swal from 'sweetalert2';
 
 export type IntegranteUI = {
   usuario_id: string;
@@ -68,13 +69,32 @@ export function SeccionEquipo({ integrantes, setIntegrantes, usuarios, disabled 
     setShowDropdown(false);
   };
 
-  const handleRemoveUser = (userId: string) => {
+  const handleRemoveUser = (userId: string, nombre: string) => {
     if (disabled) return;
     const nuevos = integrantes.filter(i => i.usuario_id !== userId);
     if (nuevos.length > 0 && !nuevos.some(i => i.es_encargado)) {
       nuevos[0].es_encargado = true;
     }
     setIntegrantes(nuevos);
+
+    // NOTIFICACIÓN PERSONALIZADA SLIDE-DOWN
+    Swal.fire({
+      toast: true,
+      position: 'top',
+      showConfirmButton: false,
+      timer: 5000,
+      timerProgressBar: true,
+      icon: 'success',
+      title: `Has removido a ${nombre} del equipo`,
+      showClass: {
+        popup: 'animate__animated animate__slideInDown'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutUp'
+      },
+      background: document.documentElement.classList.contains('dark') ? '#1a1a1a' : '#fff',
+      color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
+    });
   };
 
   const handleSetEncargado = (userId: string) => {
@@ -135,29 +155,29 @@ export function SeccionEquipo({ integrantes, setIntegrantes, usuarios, disabled 
               title="Añadir a todos los integrantes disponibles"
             >
               <Users size={18} />
-              <span className="hidden sm:inline">Añadir Todos</span>
+              <span className="inline">Añadir Todos</span>
             </button>
           </div>
 
           {showDropdown && (
-            <div className="absolute z-20 w-full mt-2 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-neutral-800 rounded-2xl shadow-xl max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2">
+            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-neutral-800 rounded-xl shadow-xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-1">
               {filteredUsuarios.length > 0 ? filteredUsuarios.map(u => (
                 <button
                   key={u.id}
                   type="button"
                   onClick={() => handleAddUser(u)}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-white/5 text-sm dark:text-gray-200 border-b border-gray-50 dark:border-white/5 last:border-0 flex items-center gap-3 transition-colors group"
+                  className="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-white/5 text-sm dark:text-gray-200 border-b border-gray-50 dark:border-white/5 last:border-0 flex items-center gap-3 transition-colors group"
                 >
-                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white shadow-sm">
-                    <UserCircle size={18} />
+                  <div className="w-7 h-7 rounded-full bg-linear-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white shadow-sm shrink-0">
+                    <UserCircle size={16} />
                   </div>
-                  <span className="flex-1 font-medium">{u.nombre}</span>
-                  <Plus size={16} className="text-blue-500 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+                  <span className="flex-1 font-medium truncate">{u.nombre}</span>
+                  <Plus size={14} className="text-blue-500 opacity-0 -translate-x-1 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
                 </button>
               )) : (
-                <div className="px-4 py-8 text-xs text-gray-400 text-center flex flex-col items-center gap-2">
-                  <Users size={20} className="opacity-20" />
-                  <span>No se encontraron usuarios</span>
+                <div className="px-4 py-6 text-[11px] text-gray-400 text-center flex flex-col items-center gap-1">
+                  <Users size={16} className="opacity-20" />
+                  <span>No hay resultados</span>
                 </div>
               )}
             </div>
@@ -166,7 +186,7 @@ export function SeccionEquipo({ integrantes, setIntegrantes, usuarios, disabled 
       )}
 
       {/* LISTA DE INTEGRANTES SELECCIONADOS */}
-      <div className="space-y-3" ref={rolDropdownRef}>
+      <div className="space-y-2" ref={rolDropdownRef}>
         {integrantes.length === 0 ? (
           <div className="py-12 border-2 border-dashed border-gray-200 dark:border-neutral-800 rounded-2xl flex flex-col items-center justify-center text-gray-400 gap-3 bg-gray-50/30 dark:bg-neutral-900/20">
             <div className="p-3 bg-white dark:bg-neutral-800 rounded-full shadow-sm">
@@ -186,31 +206,57 @@ export function SeccionEquipo({ integrantes, setIntegrantes, usuarios, disabled 
               <div
                 key={miembro.usuario_id}
                 className={`
-                  relative group flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-2xl border transition-all duration-300 animate-in slide-in-from-bottom-2 fade-in
+                  relative group flex flex-col gap-2.5 p-3 rounded-xl border transition-all duration-300 animate-in slide-in-from-bottom-2 fade-in
                   ${miembro.es_encargado
-                    ? 'bg-blue-50/60 border-blue-200 dark:bg-blue-900/10 dark:border-blue-900/30 shadow-sm shadow-blue-500/5'
-                    : 'bg-white border-gray-100 dark:bg-neutral-900 dark:border-neutral-800 hover:border-gray-300 dark:hover:border-neutral-700'
+                    ? 'bg-blue-50/60 border-blue-200 dark:bg-blue-900/10 dark:border-blue-900/30'
+                    : 'bg-white border-gray-100 dark:bg-neutral-900 dark:border-neutral-800'
                   }
                 `}
               >
-                {/* NOMBRE Y AVATAR (Icono) */}
-                <div className="flex items-center gap-3 min-w-0 sm:w-1/3">
-                  <div className={`
-                    w-10 h-10 rounded-full flex items-center justify-center shadow-sm shrink-0 
-                    ${miembro.es_encargado ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-neutral-800 text-gray-400'}
-                  `}>
-                    <UserCircle size={24} />
-                  </div>
-                  <div className="flex flex-col min-w-0">
+                {/* CABECERA: NOMBRE + ACCIONES */}
+                <div className="flex items-center justify-between gap-3 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className={`
+                      w-6 h-6 rounded-full flex items-center justify-center shadow-sm shrink-0 
+                      ${miembro.es_encargado ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-neutral-800 text-gray-400'}
+                    `}>
+                      <UserCircle size={16} />
+                    </div>
                     <span className={`text-sm truncate ${miembro.es_encargado ? 'font-bold text-blue-900 dark:text-blue-100' : 'font-medium text-gray-700 dark:text-gray-200'}`}>
                       {miembro.nombre}
                     </span>
-                    {miembro.es_encargado && <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-tighter"></span>}
                   </div>
+
+                  {!disabled && (
+                    <div className="flex items-center gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleSetEncargado(miembro.usuario_id)}
+                        className={`
+                          p-1.5 rounded-lg transition-all
+                          ${miembro.es_encargado
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-300 hover:text-gray-500'}
+                        `}
+                        title={miembro.es_encargado ? "Quitar como encargado" : "Marcar como encargado"}
+                      >
+                        <Crown size={16} className={miembro.es_encargado ? 'fill-current' : ''} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveUser(miembro.usuario_id, miembro.nombre)}
+                        className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                        title="Eliminar integrante"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {/* INPUT DE ROL CON SUGERENCIAS */}
-                <div className="flex-1 min-w-0 relative w-full sm:w-auto">
+                {/* FILA INFERIOR: INPUT DE ROL */}
+                <div className="relative w-full">
                   <div className={`relative group/input ${disabled ? 'opacity-70' : ''}`}>
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                       <Briefcase size={14} />
@@ -225,12 +271,12 @@ export function SeccionEquipo({ integrantes, setIntegrantes, usuarios, disabled 
                       }}
                       onFocus={() => !disabled && setActiveRolInput(miembro.usuario_id)}
                       disabled={disabled}
-                      className="w-full pl-9 pr-8 py-2.5 text-xs sm:text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700 dark:text-gray-200 disabled:cursor-not-allowed"
+                      className="w-full pl-9 pr-4 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-100 dark:border-neutral-800 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700 dark:text-gray-200"
                     />
                   </div>
 
                   {mostrarSugerencias && (
-                    <div className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-[#151515] border border-gray-200 dark:border-neutral-700 rounded-xl shadow-xl z-30 max-h-48 overflow-y-auto">
+                    <div className="absolute bottom-full left-0 mb-1 w-full bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-neutral-700 rounded-xl shadow-xl z-30 max-h-40 overflow-y-auto">
                       {sugerencias.slice(0, 5).map((sug, idx) => (
                         <button
                           key={idx}
@@ -239,7 +285,7 @@ export function SeccionEquipo({ integrantes, setIntegrantes, usuarios, disabled 
                             handleUpdateRol(miembro.usuario_id, sug);
                             setActiveRolInput(null);
                           }}
-                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 transition-colors border-b border-gray-50 dark:border-neutral-800 last:border-0"
+                          className="w-full text-left px-4 py-2 text-xs hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 transition-colors border-b border-gray-50 dark:border-neutral-800 last:border-0"
                         >
                           {sug}
                         </button>
@@ -247,35 +293,6 @@ export function SeccionEquipo({ integrantes, setIntegrantes, usuarios, disabled 
                     </div>
                   )}
                 </div>
-
-                {/* ACCIONES (Líder / Borrar) */}
-                {!disabled && (
-                  <div className="flex items-center justify-end gap-2 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-neutral-800">
-                    <button
-                      type="button"
-                      onClick={() => handleSetEncargado(miembro.usuario_id)}
-                      title={miembro.es_encargado ? "Quitar como encargado" : "Marcar como encargado"}
-                      className={`
-                        px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold flex items-center gap-1.5 transition-all
-                        ${miembro.es_encargado
-                          ? 'bg-blue-600 text-white shadow-md'
-                          : 'bg-gray-100 dark:bg-neutral-800 text-gray-500 hover:bg-gray-200'}
-                      `}
-                    >
-                      <Crown size={12} />
-                      {miembro.es_encargado ? 'Delegado' : 'Delegar'}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveUser(miembro.usuario_id)}
-                      className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                      title="Eliminar integrante"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                )}
               </div>
             );
           })

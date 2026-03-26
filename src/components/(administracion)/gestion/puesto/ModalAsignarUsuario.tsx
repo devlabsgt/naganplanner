@@ -120,11 +120,10 @@ export default function ModalAsignarUsuario({ isOpen, onClose, puestoId, puestoN
         </div>
 
         <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 flex justify-end gap-2 shrink-0">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-white transition-colors">Cancelar</button>
           <button 
             onClick={handleAsignar}
             disabled={!selectedUser || isPending}
-            className="px-4 py-2 rounded-lg text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50 transition-all shadow-md active:scale-95 shadow-amber-900/10 dark:shadow-amber-900/20"
+            className="px-6 py-2 rounded-lg text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50 transition-all shadow-md active:scale-95 shadow-amber-900/10 dark:shadow-amber-900/20"
           >
             {isPending ? "Asignando..." : "Confirmar Asignación"}
           </button>

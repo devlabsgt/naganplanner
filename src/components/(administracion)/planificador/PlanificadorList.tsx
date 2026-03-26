@@ -74,8 +74,11 @@ export default function PlanificadorList({ initialData, tipoVista, modulo }: Pro
   const [filtroTipo, setFiltroTipo] = useState('');
 
   const [filtroEstado, setFiltroEstado] = useState<string>(() => {
-    const tieneParaHoy = (initialData.planificadores || []).some(p => getEstadoCalculado(p.due_date) === 'Para hoy');
-    return tieneParaHoy ? 'Para hoy' : '';
+    const p = initialData.planificadores || [];
+    if (p.some(p => getEstadoCalculado(p.due_date) === 'Para hoy')) return 'Para hoy';
+    if (p.some(p => getEstadoCalculado(p.due_date) === 'Próximos')) return 'Próximos';
+    if (p.some(p => getEstadoCalculado(p.due_date) === 'Terminados')) return 'Terminados';
+    return '';
   });
 
   const [mesSeleccionado, setMesSeleccionado] = useState(new Date().getMonth());
@@ -327,10 +330,10 @@ export default function PlanificadorList({ initialData, tipoVista, modulo }: Pro
   const actosDirectos = actosDirectosFallback;
 
   return (
-    <div className="space-y-6 font-sans max-w-6xl mx-auto">
+    <div className="space-y-6 font-sans max-w-7xl mx-auto">
 
       {!expandedId ? (
-        <div className="flex flex-col gap-6 bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-[#d5cec2] dark:border-[#3e3630] shadow-sm animate-in fade-in duration-300">
+        <div className="flex flex-col gap-6 bg-white dark:bg-neutral-900 px-4 py-6 rounded-3xl border border-[#d5cec2] dark:border-[#3e3630] shadow-sm animate-in fade-in duration-300">
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -354,14 +357,16 @@ export default function PlanificadorList({ initialData, tipoVista, modulo }: Pro
                   <ClipboardList size={20} />
                 </button>
 
-                {/* BOTÓN BANCO ALABANZAS */}
-                <button
-                  onClick={() => setIsAlabanzasOpen(true)}
-                  className="bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 p-3 rounded-2xl transition-colors border border-purple-100 dark:border-purple-800 shrink-0"
-                  title="Banco de Alabanzas"
-                >
-                  <Music size={20} />
-                </button>
+                {/* BOTÓN BANCO ALABANZAS - Ocultar en Global y en Reunion */}
+                {!(modulo === 'reunion' || (tipoVista === 'todas' && modulo === 'todas')) && (
+                  <button
+                    onClick={() => setIsAlabanzasOpen(true)}
+                    className="bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 p-3 rounded-2xl transition-colors border border-purple-100 dark:border-purple-800 shrink-0"
+                    title="Banco de Alabanzas"
+                  >
+                    <Music size={20} />
+                  </button>
+                )}
 
                 {/* BOTÓN GESTOR DE EQUIPOS */}
                 <button
@@ -384,7 +389,7 @@ export default function PlanificadorList({ initialData, tipoVista, modulo }: Pro
 
           <div className="flex flex-col xl:flex-row gap-4 items-center">
 
-            <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide w-full xl:w-auto justify-start">
+            <div className="flex flex-wrap gap-2 justify-center xl:justify-start w-full xl:w-auto">
               {['Para hoy', 'Próximos', 'Terminados'].map((estado) => {
 
                 const planificadoresEnMes = planificadores.filter(plan => {
@@ -409,14 +414,14 @@ export default function PlanificadorList({ initialData, tipoVista, modulo }: Pro
                   <button
                     key={estado}
                     onClick={() => setFiltroEstado(prev => prev === estado ? '' : estado)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border flex items-center gap-2 
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all whitespace-nowrap border flex items-center gap-1.5 
                       ${isActive
                         ? `${activeStyle} shadow-sm ring-1 ring-inset`
                         : 'bg-white dark:bg-neutral-900 border-[#d5cec2] dark:border-[#3e3630] text-[#847563] hover:border-[#d6a738]/50 dark:text-[#b9ae9f]'
                       }`}
                   >
                     <span>{estado.toUpperCase()}</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] text-center min-w-5 
+                    <span className={`px-1 py-0.5 rounded text-[9px] text-center min-w-4 
                         ${isActive ? 'bg-white/50 text-current' : 'bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400'}`}>
                       {count}
                     </span>
