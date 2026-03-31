@@ -95,13 +95,13 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
   return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogPortal>
-          <DialogOverlay className="backdrop-blur-md bg-black/60 z-[100]" />
+          <DialogOverlay className="backdrop-blur-md bg-slate-900/50 dark:bg-black/60 z-[100]" />
           <DialogPrimitive.Content 
             id="modal-repertorio-alabanzas"
             className={cn(
                "fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
                "z-[101] w-full sm:max-w-[1100px] h-[90vh] sm:h-[80vh] flex flex-col p-0 overflow-hidden",
-               "bg-[#0a0a0b] dark:bg-[#111111] border border-[#d6a738]/40 rounded-[2rem] sm:rounded-[2.5rem]",
+               "bg-white dark:bg-[#111111] border border-[#d6a738]/40 rounded-[2rem] sm:rounded-[2.5rem]",
                "shadow-[0_0_50px_rgba(214,167,56,0.15)] outline-none duration-500 transition-all",
                "data-[state=open]:animate-in data-[state=closed]:animate-out",
                "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
@@ -110,7 +110,7 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
           >
         
         {/* ENCABEZADO TIPO PERFIL */}
-        <DialogHeader className="px-6 sm:px-8 py-5 sm:py-6 border-b border-neutral-800 bg-[#0a0a0b]">
+        <DialogHeader className="px-6 sm:px-8 py-5 sm:py-6 border-b border-gray-200 dark:border-neutral-800 bg-gray-50 dark:bg-[#0a0a0b]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-[#d6a738] to-[#c08e2a] text-white flex items-center justify-center shadow-lg shadow-[#d6a738]/20 shrink-0">
@@ -118,7 +118,7 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
                 <Music size={28} className="hidden sm:block" />
               </div>
               <div className="flex flex-col text-left">
-                <DialogTitle className="text-sm sm:text-base font-black text-white tracking-tight leading-none sm:leading-normal">
+                <DialogTitle className="text-sm sm:text-base font-black text-gray-900 dark:text-white tracking-tight leading-none sm:leading-normal">
                   Repertorio del Servicio
                 </DialogTitle>
                 <div className="flex items-center gap-2 mt-1 sm:mt-1">
@@ -131,7 +131,7 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
             
             <button
               onClick={onClose}
-              className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 dark:bg-white/10 hover:bg-white/10 dark:hover:bg-white/20 border border-white/10 text-white transition-all"
+              className="h-10 w-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 border border-black/10 dark:border-white/10 text-gray-600 dark:text-white transition-all"
               title="Cerrar modal"
             >
               <X size={20} />
@@ -140,7 +140,7 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
         </DialogHeader>
 
         {/* CONTENIDO SCROLLEABLE */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-8 custom-scrollbar bg-[#0a0a0b] flex flex-col gap-8 sm:gap-10">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-8 custom-scrollbar bg-white dark:bg-[#0a0a0b] flex flex-col gap-8 sm:gap-10">
           {songs.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center opacity-50 py-10">
                <Music size={48} className="text-gray-500 mb-4" />
@@ -150,31 +150,31 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
             groupKeys.map((tipo) => (
               <div key={tipo} className="flex flex-col gap-4 sm:gap-3">
                 {/* Título de la Sección de Cantos */}
-                <h3 className="text-sm sm:text-base font-bold text-white border-b-2 border-[#d6a738]/30 pb-2 inline-flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white border-b-2 border-[#d6a738]/30 pb-2 inline-flex items-center gap-2">
                   <span className="text-[#d6a738] font-black tracking-wide uppercase text-xs sm:text-sm">{tipo}:</span>
                 </h3>
 
                 {/* --- VISTA TABLE (DESKTOP) --- */}
-                <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#2a2624] shadow-xl">
+                <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-200 dark:border-[#2a2624] shadow-xl">
                   <table className="w-full text-left border-collapse text-sm table-fixed">
                     <thead>
-                      <tr className="bg-[#131211] text-[#d6a738] font-bold uppercase tracking-wider text-[10px]">
-                        <th className="px-5 py-3 border-r border-[#2a2624] w-[35%]">Nombre</th>
-                        <th className="px-5 py-3 border-r border-[#2a2624] text-center w-[12%]">Tonalidad</th>
-                        <th className="px-5 py-3 border-r border-[#2a2624] text-center w-[10%]">BPM</th>
-                        <th className="px-5 py-3 border-r border-[#2a2624] text-center w-[10%]">Compás</th>
-                        <th className="px-5 py-3 border-r border-[#2a2624] w-[20%] text-center">Director(a)</th>
+                      <tr className="bg-gray-100 dark:bg-[#131211] text-[#937841] dark:text-[#d6a738] font-bold uppercase tracking-wider text-[10px]">
+                        <th className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] w-[35%]">Nombre</th>
+                        <th className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] text-center w-[12%]">Tonalidad</th>
+                        <th className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] text-center w-[10%]">BPM</th>
+                        <th className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] text-center w-[10%]">Compás</th>
+                        <th className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] w-[20%] text-center">Director(a)</th>
                         <th className="px-5 py-3 w-[13%]">Observaciones</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-[#1a1a1a] text-[#f4ebc3] font-medium text-[13px]">
+                    <tbody className="bg-white dark:bg-[#1a1a1a] text-gray-800 dark:text-[#f4ebc3] font-medium text-[13px]">
                       {groupedSongs[tipo].map((song) => (
-                        <tr key={song.id} className="border-b border-[#2a2624] last:border-none hover:bg-[#2a2624]/50 transition-colors">
-                          <td className="px-5 py-3 border-r border-[#2a2624] font-bold truncate" title={song.nombre}>{song.nombre}</td>
-                          <td className="px-5 py-3 border-r border-[#2a2624] text-center font-black text-[#d6a738]">{song.tonalidad || '-'}</td>
-                          <td className="px-5 py-3 border-r border-[#2a2624] text-center opacity-80">{song.bpm || '-'}</td>
-                          <td className="px-5 py-3 border-r border-[#2a2624] text-center opacity-80">{song.compas || '-'}</td>
-                          <td className="px-5 py-3 border-r border-[#2a2624] text-center">
+                        <tr key={song.id} className="border-b border-gray-200 dark:border-[#2a2624] last:border-none hover:bg-gray-50 dark:hover:bg-[#2a2624]/50 transition-colors">
+                          <td className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] font-bold truncate" title={song.nombre}>{song.nombre}</td>
+                          <td className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] text-center font-black text-[#d6a738]">{song.tonalidad || '-'}</td>
+                          <td className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] text-center opacity-80">{song.bpm || '-'}</td>
+                          <td className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] text-center opacity-80">{song.compas || '-'}</td>
+                          <td className="px-5 py-3 border-r border-gray-200 dark:border-[#2a2624] text-center">
                             <DirectorSelector 
                                song={song} 
                                integrantes={integrantes} 
@@ -195,10 +195,10 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
                   {groupedSongs[tipo].map((song) => (
                     <div 
                       key={song.id} 
-                      className="bg-[#131211] rounded-2xl overflow-hidden border border-[#2a2624] shadow-lg"
+                      className="bg-white dark:bg-[#131211] rounded-2xl overflow-hidden border border-gray-200 dark:border-[#2a2624] shadow-lg"
                     >
                       {/* Cabecera de la tarjeta */}
-                      <div className="bg-[#2a241e] px-4 py-2 border-b border-[#3a3229] flex items-center justify-between">
+                      <div className="bg-[#fdfcf9] dark:bg-[#2a241e] px-4 py-2 border-b border-gray-100 dark:border-[#3a3229] flex items-center justify-between">
                          <div className="w-4 h-4 opacity-30" /> {/* Espaciador/Pencil placeholder logic */}
                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d6a738] text-center">
                            {tipo}
@@ -208,18 +208,18 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
                       
                       {/* Cuerpo de la tarjeta */}
                       <div className="py-6 px-4 flex items-center justify-center text-center">
-                        <h4 className="text-base font-black text-[#f4ebc3] uppercase tracking-tight">
+                        <h4 className="text-base font-black text-gray-900 dark:text-[#f4ebc3] uppercase tracking-tight">
                           {song.nombre}
                         </h4>
                       </div>
 
                       {/* Footer de la tarjeta con 3 columnas */}
-                      <div className="grid grid-cols-3 border-t border-[#2a2624] bg-black/40">
-                        <div className="flex flex-col items-center justify-center py-3 border-r border-[#2a2624]">
+                      <div className="grid grid-cols-3 border-t border-gray-100 dark:border-[#2a2624] bg-gray-50 dark:bg-black/40">
+                        <div className="flex flex-col items-center justify-center py-3 border-r border-gray-100 dark:border-[#2a2624]">
                           <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">BPM</span>
                           <span className="text-base font-black text-[#d6a738] leading-none">{song.bpm || '-'}</span>
                         </div>
-                        <div className="flex flex-col items-center justify-center py-3 border-r border-[#2a2624]">
+                        <div className="flex flex-col items-center justify-center py-3 border-r border-gray-100 dark:border-[#2a2624]">
                           <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Tonalidad</span>
                           <span className="text-base font-black text-[#d6a738] leading-none">{song.tonalidad || '-'}</span>
                         </div>
@@ -230,7 +230,7 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
                       </div>
                       
                       {/* Fila del Director (Móvil) */}
-                      <div className="bg-[#1a1a1a] border-t border-[#2a2624] px-4 py-2.5 flex items-center justify-start gap-3">
+                      <div className="bg-white dark:bg-[#1a1a1a] border-t border-gray-100 dark:border-[#2a2624] px-4 py-2.5 flex items-center justify-start gap-3">
                          <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-1.5 shrink-0">
                            <User size={12} className="text-[#d6a738]" /> DIRECTOR:
                          </span>
@@ -245,7 +245,7 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
 
                       {/* Observaciones (Solo si existen) */}
                       {song.observaciones && (
-                        <div className="px-4 py-3 bg-black/50 border-t border-[#2a2624] text-[11px] text-gray-400 italic text-center">
+                        <div className="px-4 py-3 bg-gray-50 dark:bg-black/50 border-t border-gray-100 dark:border-[#2a2624] text-[11px] text-gray-500 dark:text-gray-400 italic text-center">
                           "{song.observaciones}"
                         </div>
                       )}
@@ -267,9 +267,12 @@ export default function ModalRepertorioActividad({ isOpen, onClose, songs, activ
             border-radius: 10px;
           }
           .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #2a2624;
+            background: #d1d5db;
             border-radius: 10px;
             transition: all 0.3s ease;
+          }
+          .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2a2624;
           }
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #d6a738;
@@ -305,8 +308,8 @@ function DirectorSelector({
         className={cn(
           "w-fit min-w-[100px] flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-[10px] font-bold outline-none",
           song.director_id 
-             ? "bg-[#d6a738]/10 border-[#d6a738]/30 text-[#f4ebc3] hover:border-[#d6a738]" 
-             : "bg-transparent border-dashed border-gray-600/50 text-gray-500 hover:border-gray-400 hover:text-gray-300",
+             ? "bg-[#d6a738]/10 border-[#d6a738]/30 text-[#bc8f2a] dark:text-[#f4ebc3] hover:border-[#d6a738]" 
+             : "bg-transparent border-dashed border-gray-300 dark:border-gray-600/50 text-gray-500 hover:border-gray-400 hover:text-gray-600 dark:hover:text-gray-300",
           isLoading ? "opacity-50 pointer-events-none" : "",
           disabled ? "cursor-default opacity-80 hover:border-transparent hover:text-inherit" : "cursor-pointer"
         )}
@@ -327,10 +330,10 @@ function DirectorSelector({
         <PopoverPrimitive.Content
           align="center"
           sideOffset={4}
-          className="z-[110] w-[220px] p-2 rounded-xl bg-[#131211] border border-[#2a2624] shadow-2xl animate-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95"
+          className="z-[110] w-[220px] p-2 rounded-xl bg-white dark:bg-[#131211] border border-gray-200 dark:border-[#2a2624] shadow-2xl animate-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95"
         >
           <div className="flex flex-col gap-1">
-             <div className="px-2 py-1.5 text-[9px] font-black text-[#847563] uppercase tracking-widest border-b border-[#2a2624] mb-1">
+             <div className="px-2 py-1.5 text-[9px] font-black text-[#847563] uppercase tracking-widest border-b border-gray-200 dark:border-[#2a2624] mb-1">
                Seleccionar Miembro
              </div>
 
@@ -338,7 +341,7 @@ function DirectorSelector({
              {song.director_id && (
                <button
                  onClick={() => { onAssign(null); setOpen(false); }}
-                 className="flex items-center gap-2 px-2 py-2 w-full text-left text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                 className="flex items-center gap-2 px-2 py-2 w-full text-left text-xs font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                >
                  <X size={14} /> Remover asigación
                </button>
@@ -358,15 +361,15 @@ function DirectorSelector({
                      className={cn(
                        "flex items-center justify-between px-2 py-2 w-full text-left rounded-lg transition-all text-xs outline-none",
                        isSelected 
-                          ? "bg-[#d6a738]/10 text-[#d6a738] font-black" 
-                          : "text-gray-300 hover:bg-neutral-800 font-medium"
+                          ? "bg-[#d6a738]/10 text-[#bc8f2a] dark:text-[#d6a738] font-black" 
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800 font-medium"
                      )}
                    >
                      <div className="flex items-center gap-2 truncate">
                         {int.perfil?.avatar_url ? (
                            <img src={int.perfil.avatar_url} className="w-5 h-5 rounded-full object-cover shrink-0" alt="" />
                         ) : (
-                           <div className="w-5 h-5 rounded-full bg-neutral-800 flex items-center justify-center shrink-0">
+                           <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center shrink-0">
                              <User size={10} className="text-gray-500" />
                            </div>
                         )}

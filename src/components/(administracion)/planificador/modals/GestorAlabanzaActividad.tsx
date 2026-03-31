@@ -142,7 +142,7 @@ export default function GestorAlabanzaActividad({ actividadId, alabanzasIniciale
                "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
             )}
           >
-          <DialogHeader className="px-6 sm:px-8 py-5 sm:py-6 border-b border-[#e5e5e5] dark:border-neutral-800 bg-white dark:bg-[#0a0a0b]">
+          <DialogHeader className="px-4 sm:px-6 py-4 sm:py-6 border-b border-[#e5e5e5] dark:border-neutral-800 bg-white dark:bg-[#0a0a0b]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-[#d6a738] to-[#c08e2a] text-white flex items-center justify-center shadow-lg shadow-[#d6a738]/20 shrink-0">
@@ -165,7 +165,7 @@ export default function GestorAlabanzaActividad({ actividadId, alabanzasIniciale
             </div>
           </DialogHeader>
 
-          <div className="p-6 bg-[#fafafa] dark:bg-[#0a0a0b] flex flex-col gap-5 border-b border-[#e5e5e5] dark:border-neutral-800">
+          <div className="px-4 py-4 sm:px-6 sm:py-5 bg-[#fafafa] dark:bg-[#0a0a0b] flex flex-col gap-4 border-b border-[#e5e5e5] dark:border-neutral-800">
              <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1 group">
                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#d6a738] transition-colors" />
@@ -192,7 +192,7 @@ export default function GestorAlabanzaActividad({ actividadId, alabanzasIniciale
              </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-white dark:bg-[#0c0c0c]">
+          <div className="flex-1 overflow-y-auto p-4 sm:px-6 sm:py-6 custom-scrollbar bg-white dark:bg-[#0c0c0c]">
              {loadingBanco ? (
                <div className="flex flex-col items-center justify-center h-full gap-4">
                   <Loader2 size={32} className="animate-spin text-[#d6a738]" />
@@ -247,7 +247,7 @@ export default function GestorAlabanzaActividad({ actividadId, alabanzasIniciale
              )}
           </div>
           
-           <div className="p-5 border-t border-[#e5e5e5] dark:border-neutral-800 bg-white dark:bg-[#0a0a0b] flex justify-end">
+           <div className="px-4 py-4 sm:px-6 border-t border-[#e5e5e5] dark:border-neutral-800 bg-white dark:bg-[#0a0a0b] flex justify-end">
               <button 
                 onClick={handleSave}
                 disabled={isPending}

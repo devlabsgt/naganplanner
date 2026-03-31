@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { 
   Edit2, Trash2, ChevronDown, Calendar, User, Users,
   Clock, AlertCircle, Ban, Mail, Paperclip, Youtube, X,
-  Star, Music
+  Star, Music, Copy
 } from 'lucide-react';
 import { Planificador, Perfil } from './lib/zod';
-import { usePlanificadorLogic } from './lib/hooks'; 
+import { usePlanificadorLogic, usePlanificadorMutations } from './lib/hooks'; 
 import NuevoPlanificador from './modals/NuevoPlanificador';
 import FilaIntegrante from './FilaIntegrante';
 import PlanificadorChecklist from './PlanificadorChecklist'; 
@@ -15,6 +15,8 @@ import GestorArchivos from './modals/GestorArchivos';
 import GestorVideo from './modals/GestorVideo';
 import GestorAlabanzaActividad from './modals/GestorAlabanzaActividad';
 import ModalRepertorioActividad from './modals/ModalRepertorioActividad';
+import { obtenerRepertoriosDelMismoDia } from './lib/actions';
+import Swal from 'sweetalert2';
 
 interface Props {
   planificador: Planificador; 
@@ -44,6 +46,10 @@ export default function PlanificadorItem({
   const [forceShowAlabanzas, setForceShowAlabanzas] = useState(false);
   const [modalRepertorioOpen, setModalRepertorioOpen] = useState(false);
 
+  const [repertoriosHoy, setRepertoriosHoy] = useState<{ id: string, title: string, canciones_count: number }[]>([]);
+  const [isSearchingRepertorios, setIsSearchingRepertorios] = useState(false);
+  const [showImportList, setShowImportList] = useState(false);
+
   const { permisos, datos, acciones } = usePlanificadorLogic(
     planificador, 
     usuarioActualId, 
@@ -52,6 +58,8 @@ export default function PlanificadorItem({
     onToggle, 
     isExpanded
   );
+
+  const { importarRepertorio } = usePlanificadorMutations();
 
   const handleHeaderClick = (e: React.MouseEvent) => {
     if (permisos.estaPendiente) {
@@ -116,6 +124,72 @@ export default function PlanificadorItem({
   const showFiles = adjuntosSeguros.length > 0 || forceShowFiles;
   const showVideos = videosSeguros.length > 0 || forceShowVideos;
   const showAlabanzas = alabanzasSeguras.length > 0 || forceShowAlabanzas;
+
+  const handleBuscarRepertorios = async () => {
+    setIsSearchingRepertorios(true);
+    try {
+      const res = await obtenerRepertoriosDelMismoDia(planificador.id);
+      setRepertoriosHoy(res);
+      setShowImportList(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSearchingRepertorios(false);
+    }
+  };
+
+  const handleClonar = async (origenId: string) => {
+    // Cerramos el popover de inmediato para evitar bloqueos
+    setShowImportList(false);
+
+    const isDark = document.documentElement.classList.contains('dark');
+    
+    Swal.fire({
+      title: '¿Importar Repertorio?',
+      text: 'Esto reemplazará cualquier canción que ya tengas seleccionada en esta actividad.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, importar',
+      cancelButtonText: 'Cancelar',
+      heightAuto: false,     // Crucial para evitar congelamientos en iOS/móviles
+      scrollbarPadding: false, // Crucial para evitar congelamientos
+      showLoaderOnConfirm: true,
+      background: isDark ? '#1a1a1a' : '#ffffff',
+      color: isDark ? '#ffffff' : '#1f2937',
+      buttonsStyling: false,
+      customClass: {
+        popup: 'rounded-3xl shadow-2xl border border-gray-100 dark:border-neutral-800',
+        confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl px-6 py-2.5 mx-2',
+        cancelButton: 'bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl px-6 py-2.5 mx-2'
+      },
+      preConfirm: async () => {
+        try {
+          await importarRepertorio.mutateAsync({ origenId, destinoId: planificador.id });
+          return true;
+        } catch (error: any) {
+          Swal.showValidationMessage(`Error al importar: ${error.message}`);
+          return false;
+        }
+      },
+      allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setForceShowAlabanzas(true);
+        // Pequeño brindis visual de éxito
+        Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 2000,
+          background: isDark ? '#10b981' : '#d1fae5', // Fondo verde éxito
+          color: isDark ? '#ffffff' : '#065f46' 
+        }).fire({
+          icon: 'success',
+          title: 'Importación exitosa'
+        });
+      }
+    });
+  };
 
   return (
     <>
@@ -276,36 +350,91 @@ export default function PlanificadorItem({
                       </button>
                    )}
                    
-                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                     <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 flex items-center justify-center bg-gradient-to-br from-[#d6a738] to-[#c08e2a] text-white rounded-xl shadow-lg shadow-[#d6a738]/20">
-                          <Music size={24} />
-                        </div>
-                        <div>
-                          <h4 className="font-black text-lg text-[#4a3f36] dark:text-[#f4ebc3] tracking-tight">Repertorio Musical</h4>
-                          <p className="text-xs font-bold text-[#847563] uppercase tracking-widest mt-0.5">{alabanzasSeguras.length} CANTOS PROGRAMADOS</p>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-2">
-                       {alabanzasSeguras.length > 0 && (
-                         <button 
-                           onClick={() => setModalRepertorioOpen(true)}
-                           className="flex-1 sm:flex-none px-4 py-2 bg-neutral-900 text-white dark:bg-[#f4ebc3] dark:text-[#2a2624] rounded-xl text-[10px] font-black uppercase tracking-widest transition-transform active:scale-95 shadow-md flex justify-center items-center"
-                         >
-                           Ver Repertorio
-                         </button>
-                       )}
-                       {puedeGestionarContenido && (
-                         <div className="flex-1 sm:flex-none">
-                           <GestorAlabanzaActividad 
-                              actividadId={planificador.id}
-                              alabanzasIniciales={alabanzasSeguras}
-                              readonly={!puedeGestionarContenido}
-                           />
+                    <div className="flex flex-col gap-3">
+
+                      {/* Fila superior: icono + título */}
+                      <div className="flex items-center gap-4">
+                         <div className="h-12 w-12 shrink-0 flex items-center justify-center bg-gradient-to-br from-[#d6a738] to-[#c08e2a] text-white rounded-xl shadow-lg shadow-[#d6a738]/20">
+                           <Music size={24} />
                          </div>
-                       )}
-                     </div>
-                   </div>
+                         <div>
+                           <h4 className="font-black text-lg text-[#4a3f36] dark:text-[#f4ebc3] tracking-tight">Repertorio Musical</h4>
+                           <p className="text-xs font-bold text-[#847563] uppercase tracking-widest mt-0.5">{alabanzasSeguras.length} CANTOS PROGRAMADOS</p>
+                         </div>
+                      </div>
+
+                      {/* Fila inferior: botones de acción */}
+                      <div className="flex items-center gap-2">
+
+                        {/* Botón importar — solo visible si no hay canciones */}
+                        {alabanzasSeguras.length === 0 && puedeGestionarContenido && (
+                          <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleBuscarRepertorios(); }}
+                              disabled={isSearchingRepertorios}
+                              title="Importar de otra actividad de hoy"
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 dark:bg-[#1a2b4b] dark:text-[#60a5fa] border border-blue-100 dark:border-[#2a3b5b] rounded-xl hover:bg-blue-100 dark:hover:bg-[#1e345b] transition-all active:scale-95 shadow-sm"
+                            >
+                              {isSearchingRepertorios ? <Music size={15} className="animate-pulse" /> : <Copy size={15} />}
+                              <span className="text-[10px] font-black uppercase tracking-widest">
+                                 {isSearchingRepertorios ? 'Buscando...' : 'Importar de Hoy'}
+                              </span>
+                            </button>
+
+                            {showImportList && (
+                              <div className="absolute z-50 top-full left-0 mt-2 p-3 bg-white dark:bg-neutral-800 rounded-2xl border border-gray-200 dark:border-[#3e3630] shadow-2xl animate-in fade-in slide-in-from-top-2 w-[250px] max-w-[85vw]">
+                                <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-100 dark:border-neutral-700">
+                                  <span className="text-[10px] font-black uppercase text-gray-400">¿Importar de hoy?</span>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); setShowImportList(false); }} 
+                                    className="hover:text-red-500 text-gray-400 transition-colors"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                                <div className="flex flex-col gap-1 max-h-[200px] overflow-y-auto pr-1">
+                                  {repertoriosHoy.length === 0 ? (
+                                    <p className="text-xs text-center py-4 text-gray-500">No hay otros repertorios hoy</p>
+                                  ) : (
+                                    repertoriosHoy.map(rep => (
+                                      <button 
+                                        key={rep.id}
+                                        onClick={(e) => { e.stopPropagation(); handleClonar(rep.id); }}
+                                        className="flex flex-col text-left p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-blue-700 dark:text-blue-300 w-full"
+                                      >
+                                        <span className="text-[11px] font-bold truncate">{rep.title}</span>
+                                        <span className="text-[9px] opacity-70">{rep.canciones_count} cantos</span>
+                                      </button>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Ver Repertorio */}
+                        {alabanzasSeguras.length > 0 && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setModalRepertorioOpen(true); }}
+                            className="flex-1 px-4 py-2 bg-neutral-900 text-white dark:bg-[#f4ebc3] dark:text-[#2a2624] rounded-xl text-[10px] font-black uppercase tracking-widest transition-transform active:scale-95 shadow-md flex justify-center items-center"
+                          >
+                            Ver Repertorio
+                          </button>
+                        )}
+
+                        {/* Añadir / editar canciones */}
+                        {puedeGestionarContenido && (
+                          <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+                            <GestorAlabanzaActividad 
+                               actividadId={planificador.id}
+                               alabanzasIniciales={alabanzasSeguras}
+                               readonly={!puedeGestionarContenido}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                    <ModalRepertorioActividad 
                       isOpen={modalRepertorioOpen}

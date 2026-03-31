@@ -18,6 +18,7 @@ export default function AulaItem({ aula, perfilActual, onEdit, onClick }: Props)
     // Verificación de rol robusta (case-insensitive)
     const userRole = (perfilActual?.rol || '').toUpperCase();
     const esAdmin = userRole === 'SUPER' || userRole === 'ADMIN';
+    const puedeEditar = esAdmin || aula.catedratico_id === perfilActual?.id;
 
     const handleEliminar = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -86,28 +87,27 @@ export default function AulaItem({ aula, perfilActual, onEdit, onClick }: Props)
                     </p>
                 </div>
 
-                {/* ACCIONES (Botón Editar y Eliminar para Admins) */}
+                {/* ACCIONES (Botón Editar y Eliminar) */}
                 <div className="flex items-center gap-2">
-                    {esAdmin && (
-                        <>
-                            <button
-                                onClick={handleEdit}
-                                className="p-2 text-gray-600 hover:text-blue-500 hover:bg-blue-500/5 rounded-lg transition-all"
-                                title="Editar Aula"
-                            >
-                                <Edit3 size={16} />
-                            </button>
-
-                            <button
-                                onClick={handleEliminar}
-                                className="p-2.5 text-gray-600 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all"
-                                title="Eliminar Aula"
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        </>
+                    {puedeEditar && (
+                        <button
+                            onClick={handleEdit}
+                            className="p-2 text-gray-600 hover:text-blue-500 hover:bg-blue-500/5 rounded-lg transition-all"
+                            title="Editar Aula"
+                        >
+                            <Edit3 size={16} />
+                        </button>
                     )}
 
+                    {esAdmin && (
+                        <button
+                            onClick={handleEliminar}
+                            className="p-2.5 text-gray-600 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all"
+                            title="Eliminar Aula"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

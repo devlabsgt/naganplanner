@@ -8,7 +8,7 @@ import {
 import GestorEstudiantes from '../estudiantes/GestorEstudiantes';
 import GestorAsistencia from '../asistencias/GestorAsistencia';
 import { useGestorEstudiantes, useEscuelaMutations } from '../lib/hooks';
-import { AulaForm } from '../lib/zod';
+import { AulaForm, DIAS_OPCIONES } from '../lib/zod';
 import Swal from 'sweetalert2';
 import { Loader2 } from 'lucide-react';
 
@@ -101,13 +101,15 @@ export default function InteriorAula({ aula, onBack, perfilActual }: Props) {
 
             {/* CABECERA (Reemplaza a la página anterior) */}
             <div className="space-y-2 pt-4 md:pt-6">
-                <button
-                    onClick={onBack}
-                    className="inline-flex items-center gap-2 text-[#847563] hover:text-[#4a3f36] dark:hover:text-[#f4ebc3] transition-colors text-xs font-black uppercase tracking-widest group"
-                >
-                    <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                    Regresar al listado
-                </button>
+                <div className="flex justify-end">
+                    <button
+                        onClick={onBack}
+                        className="inline-flex items-center gap-2 text-[#847563] hover:text-[#4a3f36] dark:hover:text-[#f4ebc3] transition-colors text-xs font-black uppercase tracking-widest group"
+                    >
+                        <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                        Regresar al listado
+                    </button>
+                </div>
 
                 <div className="border-b border-[#d5cec2] dark:border-[#3e3630] pb-4">
                     <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
@@ -162,10 +164,16 @@ export default function InteriorAula({ aula, onBack, perfilActual }: Props) {
                                 Información Académica
                             </h2>
 
-                            <div className="flex flex-wrap items-center gap-x-8 gap-y-1">
+                            <div className="flex flex-wrap md:flex-nowrap items-center gap-x-6 md:gap-x-8 gap-y-2 whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                    <p className="text-[9px] font-black text-[#847563] uppercase tracking-widest">Días:</p>
+                                    <h3 className="text-[11px] font-black leading-none tracking-tight text-[#4a3f36] dark:text-[#f4ebc3]">
+                                        {formatoDiasRango(aula.horario?.dias)}
+                                    </h3>
+                                </div>
                                 <div className="flex items-center gap-2">
                                     <p className="text-[9px] font-black text-[#847563] uppercase tracking-widest">Horario:</p>
-                                    <h3 className="text-[11px] font-black leading-none truncate tracking-tight text-[#4a3f36] dark:text-[#f4ebc3]">
+                                    <h3 className="text-[11px] font-black leading-none tracking-tight text-[#4a3f36] dark:text-[#f4ebc3]">
                                         {(aula.horario?.entrada || '00:00').slice(0, 5)} - {(aula.horario?.salida || '00:00').slice(0, 5)}
                                     </h3>
                                 </div>
@@ -282,3 +290,42 @@ function TotalEstudiantesBadge({ aulaId }: { aulaId: string }) {
         </div>
     );
 }
+
+/**
+ * Formatea un arreglo de IDs de días en un string legible
+ * Ejemplo: [1,2,3,4,5] -> "Lun-Vie" | [1,3,5] -> "Lun, Mie, Vie"
+ */
+function formatoDiasRango(diasIds?: number[]) {
+    if (!diasIds || diasIds.length === 0) return 'Sin Asignar';
+    const sorted = [...new Set(diasIds)].sort((a, b) => a - b);
+    
+    const ranges: {start: number, end: number}[] = [];
+    let start = sorted[0];
+    let end = sorted[0];
+
+    for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] === end + 1) {
+            end = sorted[i]; 
+        } else {
+            ranges.push({ start, end });
+            start = sorted[i];
+            end = sorted[i];
+        }
+    }
+    ranges.push({ start, end });
+
+    return ranges.map(r => {
+        if (r.start === r.end) {
+            return DIAS_OPCIONES.find(d => d.id === r.start)?.label;
+        } else if (r.end === r.start + 1) {
+            const lbl1 = DIAS_OPCIONES.find(d => d.id === r.start)?.label;
+            const lbl2 = DIAS_OPCIONES.find(d => d.id === r.end)?.label;
+            return `${lbl1}, ${lbl2}`; 
+        } else {
+            const lbl1 = DIAS_OPCIONES.find(d => d.id === r.start)?.label;
+            const lbl2 = DIAS_OPCIONES.find(d => d.id === r.end)?.label;
+            return `${lbl1}-${lbl2}`;
+        }
+    }).join(', ');
+}
+
