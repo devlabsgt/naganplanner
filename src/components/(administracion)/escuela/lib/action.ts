@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { aulaFormSchema, AulaForm, horarioFormSchema, HorarioForm, estudianteFormSchema, EstudianteForm } from './zod';
+import { sendPushToUsers } from '@/utils/push-utils';
 
 /**
  * Función interna para formatear la fecha de creación con desfase de 6 horas
@@ -127,11 +128,32 @@ export async function guardarAula(data: AulaForm, idEdicion?: string) {
     };
 
     if (idEdicion) {
+        // Obtenemos el aula original para comparar si el catedrático cambió
+        const { data: oldAula } = await supabase.from('esc_aulas').select('catedratico_id, nombre').eq('id', idEdicion).single();
+
         const { error } = await supabase.from('esc_aulas').update(payload).eq('id', idEdicion);
         if (error) throw new Error(error.message);
+
+        // Enviar notificación si el catedrático cambió y no es el mismo que está realizando la acción
+        if (oldAula && oldAula.catedratico_id !== payload.catedratico_id && payload.catedratico_id !== user.id) {
+            sendPushToUsers([payload.catedratico_id], {
+                title: "Nueva Asignación de Aula",
+                body: `Has sido asignado como catedrático del aula: ${payload.nombre.toUpperCase()}`,
+                url: "/kore/escuela"
+            }).catch(err => console.error("Error enviando push en escuela edicion:", err));
+        }
     } else {
         const { error } = await supabase.from('esc_aulas').insert(payload);
         if (error) throw new Error(error.message);
+
+        // Enviar notificación al crear el aula si fue asignada a otra persona
+        if (payload.catedratico_id && payload.catedratico_id !== user.id) {
+            sendPushToUsers([payload.catedratico_id], {
+                title: "Asignación de Nueva Aula",
+                body: `Se te ha asignado como catedrático del aula: ${payload.nombre.toUpperCase()}`,
+                url: "/kore/escuela"
+            }).catch(err => console.error("Error enviando push en escuela creacion:", err));
+        }
     }
 
     revalidatePath('/kore/escuela');

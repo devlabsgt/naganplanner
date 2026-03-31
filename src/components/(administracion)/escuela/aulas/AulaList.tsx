@@ -243,6 +243,7 @@ export default function AulaList({ initialData }: Props) {
         usuarios={usuarios}
         horarios={horarios}
         aulaEditar={aulaEditar}
+        esAdmin={esAdmin}
       />
     </div>
   );

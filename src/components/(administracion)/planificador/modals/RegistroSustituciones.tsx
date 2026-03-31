@@ -112,11 +112,11 @@ export default function RegistroSustituciones({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#1a1a1a] w-full max-w-7xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 dark:border-neutral-800">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-1.5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-[#1a1a1a] w-[99vw] max-w-[99vw] rounded-3xl shadow-2xl flex flex-col h-[95vh] max-h-[96vh] overflow-hidden border border-gray-100 dark:border-neutral-800">
 
         {/* HEADER */}
-        <div className="px-5 sm:px-8 py-4 sm:py-5 border-b border-gray-100 dark:border-neutral-800 flex flex-col sm:flex-row justify-between sm:items-center bg-white dark:bg-[#1a1a1a] shrink-0 relative gap-4 sm:gap-0">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-neutral-800 flex flex-col sm:flex-row justify-between sm:items-center bg-white dark:bg-[#1a1a1a] shrink-0 relative gap-3 sm:gap-0">
           <div className="flex flex-col gap-1 w-full sm:pr-0">
             <div className="flex flex-col sm:flex-row xl:items-center gap-3 w-full">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2 whitespace-nowrap">
@@ -200,7 +200,7 @@ export default function RegistroSustituciones({ isOpen, onClose }: Props) {
         </div>
 
         {/* CONTENIDO */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-gray-50/50 dark:bg-[#1a1a1a] flex flex-col">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 custom-scrollbar bg-gray-50/50 dark:bg-[#1a1a1a] flex flex-col">
           {isLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center text-gray-400 space-y-3">
               <Loader2 size={32} className="animate-spin text-blue-500" />
@@ -231,7 +231,7 @@ export default function RegistroSustituciones({ isOpen, onClose }: Props) {
                     const smWidthHack = typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 1;
                     
                     return (
-                      <tr key={row.id} className="flex flex-col sm:table-row bg-white dark:bg-[#1a1a1a] sm:bg-transparent sm:dark:bg-transparent rounded-2xl border border-gray-200 dark:border-neutral-800 sm:border-0 sm:border-b border-gray-100 dark:border-neutral-800 p-4 sm:p-0 hover:border-blue-500/30 sm:hover:bg-gray-50/80 sm:dark:hover:bg-neutral-900/50 transition-colors shadow-sm sm:shadow-none relative last:border-b-0">
+                      <tr key={row.id} className="flex flex-col sm:table-row bg-white dark:bg-[#1a1a1a] sm:bg-transparent sm:dark:bg-transparent rounded-2xl border border-gray-200 dark:border-neutral-800 sm:border-0 sm:border-b border-gray-100 dark:border-neutral-800 p-3 sm:p-0 hover:border-blue-500/30 sm:hover:bg-gray-50/80 sm:dark:hover:bg-neutral-900/50 transition-colors shadow-sm sm:shadow-none relative last:border-b-0">
                         {/* VISTA MÓVIL (Grid de 2 columnas) */}
                         <td className="sm:hidden w-full pb-3 border-b border-gray-100 dark:border-neutral-800 space-y-3">
                           <div className="grid grid-cols-2 gap-4 w-full h-full">

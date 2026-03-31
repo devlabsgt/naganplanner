@@ -123,8 +123,20 @@ export async function sincronizarRepertorioActividad(actividad_id: string, alaba
     .single();
 
   if (!actividad) throw new Error('Actividad no encontrada');
-  
-  if (!isJefe && actividad.created_by !== user.id) {
+
+  // Verificar si el usuario es encargado de esta actividad
+  const { data: registroEncargado } = await supabase
+    .from('act_integrantes')
+    .select('id')
+    .eq('actividad_id', actividad_id)
+    .eq('usuario_id', user.id)
+    .eq('es_encargado', true)
+    .maybeSingle();
+
+  const esEncargado = !!registroEncargado;
+  const esCreador = actividad.created_by === user.id;
+
+  if (!isJefe && !esCreador && !esEncargado) {
     throw new Error('No tienes permisos suficientes para modificar el repertorio.');
   }
 
@@ -172,4 +184,82 @@ export async function asignarDirectorCanto(actividad_id: string, alabanza_id: st
   }
 
   revalidatePath('/kore/planificador');
+}
+
+export async function obtenerRepertoriosDelMismoDia(actividad_id: string) {
+  const supabase = await createClient();
+  
+  // 1. Obtener la fecha de la actividad actual
+  const { data: actividadActual } = await supabase
+    .from('act_actividades')
+    .select('due_date')
+    .eq('id', actividad_id)
+    .single();
+
+  if (!actividadActual?.due_date) return [];
+
+  const fecha = new Date(actividadActual.due_date);
+  const fechaSoloDia = fecha.toISOString().split('T')[0];
+
+  // 2. Buscar otras actividades en el mismo da que tengan alabanzas
+  // Nota: Usamos query raw o filtros de fecha para asegurar el da exacto independientemente de la hora
+  const { data: actividadesConCanciones, error } = await supabase
+    .from('act_actividades')
+    .select(`
+      id,
+      title,
+      modulo,
+      act_actividades_alabanzas!inner (id)
+    `)
+    .neq('id', actividad_id)
+    .gte('due_date', `${fechaSoloDia}T00:00:00`)
+    .lte('due_date', `${fechaSoloDia}T23:59:59`);
+
+  if (error) {
+    console.error("Error al buscar repertorios del da:", error);
+    return [];
+  }
+
+  return actividadesConCanciones.map((act: any) => ({
+    id: act.id,
+    title: act.title,
+    modulo: act.modulo,
+    canciones_count: act.act_actividades_alabanzas?.length || 0
+  }));
+}
+
+export async function clonarRepertorio(origen_id: string, destino_id: string) {
+  const supabase = await createClient();
+
+  // 1. Obtener las canciones de la actividad origen
+  const { data: cancionesOrigen, error: fetchError } = await supabase
+    .from('act_actividades_alabanzas')
+    .select('alabanza_id, id_director')
+    .eq('actividad_id', origen_id);
+
+  if (fetchError || !cancionesOrigen) throw new Error("No se pudo obtener el repertorio origen");
+
+  // 2. Eliminar repertorio actual de la actividad destino
+  await supabase
+    .from('act_actividades_alabanzas')
+    .delete()
+    .eq('actividad_id', destino_id);
+
+  // 3. Insertar las nuevas canciones
+  if (cancionesOrigen.length > 0) {
+    const payload = cancionesOrigen.map(c => ({
+      actividad_id: destino_id,
+      alabanza_id: c.alabanza_id,
+      id_director: c.id_director
+    }));
+
+    const { error: insertError } = await supabase
+      .from('act_actividades_alabanzas')
+      .insert(payload);
+
+    if (insertError) throw new Error(insertError.message);
+  }
+
+  revalidatePath('/kore/planificador');
+  return { success: true, count: cancionesOrigen.length };
 }

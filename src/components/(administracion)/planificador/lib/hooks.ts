@@ -24,7 +24,8 @@ import {
   obtenerRolesExistentes,
   obtenerRegistroSustituciones,
   sincronizarRepertorioActividad,
-  marcarAsistenciaUbicacion
+  marcarAsistenciaUbicacion,
+  clonarRepertorio
 } from "./actions";
 
 import {
@@ -161,6 +162,10 @@ export const usePlanificadorMutations = () => {
 
     sincronizarRepertorio: useMutation({
       mutationFn: ({ id, alabanzasIds }: { id: string, alabanzasIds: string[] }) => sincronizarRepertorioActividad(id, alabanzasIds),
+      onSuccess: invalidar,
+    }),
+    importarRepertorio: useMutation({
+      mutationFn: ({ origenId, destinoId }: { origenId: string, destinoId: string }) => clonarRepertorio(origenId, destinoId),
       onSuccess: invalidar,
     }),
     isLoading: guardar.isPending || eliminar.isPending || responderInvitacion.isPending ||

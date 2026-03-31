@@ -15,9 +15,10 @@ interface Props {
     usuarios: Perfil[];
     horarios: Horario[];
     aulaEditar?: Aula | null;
+    esAdmin?: boolean;
 }
 
-export default function NuevaAula({ isOpen, onClose, usuarios, horarios, aulaEditar }: Props) {
+export default function NuevaAula({ isOpen, onClose, usuarios, horarios, aulaEditar, esAdmin = true }: Props) {
     const { guardar } = useEscuelaMutations();
     const isEditing = !!aulaEditar;
 
@@ -141,12 +142,17 @@ export default function NuevaAula({ isOpen, onClose, usuarios, horarios, aulaEdi
                                 <input
                                     value={busqueda}
                                     onChange={(e) => {
-                                        setBusqueda(e.target.value);
-                                        setIsSelectUserOpen(true);
+                                        if (esAdmin) {
+                                            setBusqueda(e.target.value);
+                                            setIsSelectUserOpen(true);
+                                        }
                                     }}
-                                    onFocus={() => setIsSelectUserOpen(true)}
+                                    onFocus={() => {
+                                        if (esAdmin) setIsSelectUserOpen(true);
+                                    }}
+                                    readOnly={!esAdmin}
                                     placeholder="Buscar docente..."
-                                    className={`w-full pl-12 pr-5 py-4 bg-gray-50 dark:bg-neutral-800 border ${errors.catedratico_id ? 'border-red-500' : 'border-gray-200 dark:border-neutral-700'} rounded-2xl outline-none focus:ring-2 focus:ring-[#d6a738]/20 transition-all dark:text-white font-bold leading-tight`}
+                                    className={`w-full pl-12 pr-5 py-4 dark:bg-neutral-800 border ${errors.catedratico_id ? 'border-red-500' : 'border-gray-200 dark:border-neutral-700'} rounded-2xl outline-none ${esAdmin ? 'focus:ring-2 focus:ring-[#d6a738]/20 bg-gray-50' : 'opacity-70 cursor-not-allowed bg-gray-100 dark:bg-neutral-900'} transition-all dark:text-white font-bold leading-tight`}
                                 />
                                 <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
 
@@ -221,7 +227,7 @@ export default function NuevaAula({ isOpen, onClose, usuarios, horarios, aulaEdi
                         </div>
 
                         {/* STATUS TOGGLE */}
-                        <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-neutral-800 rounded-2xl border border-gray-100 dark:border-neutral-700 shadow-sm">
+                        <div className={`flex items-center justify-between p-5 bg-gray-50 dark:bg-neutral-800 rounded-2xl border border-gray-100 dark:border-neutral-700 shadow-sm ${!esAdmin ? 'opacity-70 pointer-events-none' : ''}`}>
                             <div className="flex flex-col">
                                 <span className="text-sm font-black text-gray-800 dark:text-white uppercase tracking-tight">Aula Habilitada</span>
                                 <span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Visible para estudiantes</span>
