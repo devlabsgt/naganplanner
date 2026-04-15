@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { checkIsJefe } from './core';
+import { sendPushToRoles } from '@/utils/push-utils';
 
 // Helper local para instanciar el cliente con privilegios
 function getAdminClient() {
@@ -118,7 +119,7 @@ export async function sincronizarRepertorioActividad(actividad_id: string, alaba
   
   const { data: actividad } = await supabase
     .from('act_actividades')
-    .select('created_by')
+    .select('created_by, title')
     .eq('id', actividad_id)
     .single();
 
@@ -160,6 +161,20 @@ export async function sincronizarRepertorioActividad(actividad_id: string, alaba
       .insert(payload);
 
     if (insertError) throw new Error(insertError.message);
+
+    // 3. Notificar a los roles estratégicos sobre el nuevo repertorio
+    try {
+      // Usamos las variaciones más comunes por precaución con mayúsculas/minúsculas en tu base de datos
+      const rolesANotificar = ['lider', 'Líder', 'Lider', 'LIDER', 'admin', 'Admin', 'ADMIN', 'super', 'Super', 'SUPER'];
+      
+      await sendPushToRoles(rolesANotificar, {
+        title: "Repertorio de Alabanzas",
+        body: `El departamento de Alabanza creó/modificó un repertorio para: ${actividad.title || 'Desconocida'}`,
+        url: "/kore/planificador"
+      });
+    } catch (err) {
+      console.error("Error enviando notificación push de repertorio:", err);
+    }
   }
 
   revalidatePath('/kore/planificador');
