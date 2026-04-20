@@ -137,7 +137,11 @@ export default function VerPerfil({ isOpen, onClose, userId }: VerPerfilProps) {
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       >
                         {roleOptions.map((role) => (
-                          <option key={role} value={role}>
+                          <option 
+                            key={role} 
+                            value={role}
+                            className="bg-white text-black dark:bg-zinc-950 dark:text-white"
+                          >
                             {role.toUpperCase()}
                           </option>
                         ))}

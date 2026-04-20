@@ -4,12 +4,13 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { checkIsJefe } from './core';
+import { sendPushToRoles, sendPushToUsers } from '@/utils/push-utils';
 
 // Helper local para instanciar el cliente con privilegios
 function getAdminClient() {
   return createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
@@ -42,7 +43,7 @@ export async function crearAlabanza(data: {
     console.error("Error al crear alabanza:", error);
     throw new Error(error.message);
   }
-  
+
   revalidatePath('/kore/planificador');
 }
 
@@ -115,10 +116,10 @@ export async function sincronizarRepertorioActividad(actividad_id: string, alaba
   if (!user) throw new Error('No autenticado');
 
   const isJefe = await checkIsJefe(supabase, user.id);
-  
+
   const { data: actividad } = await supabase
     .from('act_actividades')
-    .select('created_by')
+    .select('created_by, title')
     .eq('id', actividad_id)
     .single();
 
@@ -154,12 +155,92 @@ export async function sincronizarRepertorioActividad(actividad_id: string, alaba
       actividad_id,
       alabanza_id: id
     }));
-    
+
     const { error: insertError } = await supabase
       .from('act_actividades_alabanzas')
       .insert(payload);
 
     if (insertError) throw new Error(insertError.message);
+
+    // 3. NOTIFICACIONES CONDICIONALES
+    try {
+      // Obtener la fecha de esta actividad
+      const { data: actividadConFecha } = await supabase
+        .from('act_actividades')
+        .select('due_date')
+        .eq('id', actividad_id)
+        .single();
+
+      const fechaDue = actividadConFecha?.due_date;
+      let hayActividadesMismaFecha = false;
+      let encargadosMismaFechaIds: string[] = [];
+
+      if (fechaDue) {
+        const fechaSoloDia = new Date(fechaDue).toISOString().split('T')[0];
+
+        // Buscar otras actividades en la misma fecha
+        const { data: actividadesMismaFecha } = await supabase
+          .from('act_actividades')
+          .select('id')
+          .neq('id', actividad_id)
+          .gte('due_date', `${fechaSoloDia}T00:00:00`)
+          .lte('due_date', `${fechaSoloDia}T23:59:59`);
+
+        if (actividadesMismaFecha && actividadesMismaFecha.length > 0) {
+          hayActividadesMismaFecha = true;
+
+          // Obtener encargados de esas otras actividades
+          const idsOtrasActividades = actividadesMismaFecha.map(a => a.id);
+          const { data: encargadosOtras } = await supabase
+            .from('act_integrantes')
+            .select('usuario_id')
+            .in('actividad_id', idsOtrasActividades)
+            .eq('es_encargado', true);
+
+          encargadosMismaFechaIds = (encargadosOtras || [])
+            .map(e => e.usuario_id)
+            .filter(id => id !== user.id);
+        }
+      }
+
+      // Notificar siempre a los miembros de ESTA actividad
+      const { data: integrantes } = await supabase
+        .from('act_integrantes')
+        .select('usuario_id')
+        .eq('actividad_id', actividad_id);
+
+      const miembrosActividadIds = (integrantes || [])
+        .map(i => i.usuario_id)
+        .filter(id => id !== user.id);
+
+      const pushPayload = {
+        title: "🎵 Repertorio Actualizado",
+        body: `Se ha definido el repertorio para la actividad: ${actividad.title || 'Desconocida'}`,
+        url: "/kore/planificador"
+      };
+
+      const promesas: Promise<any>[] = [];
+
+      // Siempre: notificar a miembros de esta actividad
+      if (miembrosActividadIds.length > 0) {
+        promesas.push(sendPushToUsers(miembrosActividadIds, pushPayload));
+      }
+
+      // Solo si hay actividades en la misma fecha: notificar a roles y encargados de otras actividades
+      if (hayActividadesMismaFecha) {
+        const rolesANotificar = ['lider', 'Líder', 'Lider', 'LIDER', 'admin', 'Admin', 'ADMIN', 'super', 'Super', 'SUPER'];
+        promesas.push(sendPushToRoles(rolesANotificar, pushPayload));
+
+        if (encargadosMismaFechaIds.length > 0) {
+          promesas.push(sendPushToUsers(encargadosMismaFechaIds, pushPayload));
+        }
+      }
+
+      await Promise.all(promesas);
+
+    } catch (err) {
+      console.error("Error enviando notificación push de repertorio:", err);
+    }
   }
 
   revalidatePath('/kore/planificador');
@@ -188,7 +269,7 @@ export async function asignarDirectorCanto(actividad_id: string, alabanza_id: st
 
 export async function obtenerRepertoriosDelMismoDia(actividad_id: string) {
   const supabase = await createClient();
-  
+
   // 1. Obtener la fecha de la actividad actual
   const { data: actividadActual } = await supabase
     .from('act_actividades')
@@ -230,6 +311,7 @@ export async function obtenerRepertoriosDelMismoDia(actividad_id: string) {
 
 export async function clonarRepertorio(origen_id: string, destino_id: string) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   // 1. Obtener las canciones de la actividad origen
   const { data: cancionesOrigen, error: fetchError } = await supabase
@@ -258,6 +340,34 @@ export async function clonarRepertorio(origen_id: string, destino_id: string) {
       .insert(payload);
 
     if (insertError) throw new Error(insertError.message);
+
+    // 4. NOTIFICAR A LOS MIEMBROS DE LA ACTIVIDAD DESTINO (IMPORTACIÓN)
+    try {
+      const { data: infoDestino } = await supabase
+        .from('act_actividades')
+        .select('title')
+        .eq('id', destino_id)
+        .single();
+
+      const { data: integrantes } = await supabase
+        .from('act_integrantes')
+        .select('usuario_id')
+        .eq('actividad_id', destino_id);
+
+      const usuariosIds = (integrantes || [])
+        .map(i => i.usuario_id)
+        .filter(id => id !== user?.id);
+
+      if (usuariosIds.length > 0 && infoDestino) {
+        await sendPushToUsers(usuariosIds, {
+          title: "🎵 Repertorio Importado",
+          body: `Se ha importado un repertorio de alabanzas para: ${infoDestino.title}`,
+          url: "/kore/planificador"
+        });
+      }
+    } catch (err) {
+      console.error("Error enviando push en clonación de repertorio:", err);
+    }
   }
 
   revalidatePath('/kore/planificador');

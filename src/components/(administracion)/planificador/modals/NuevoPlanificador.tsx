@@ -450,7 +450,7 @@ export default function NuevoPlanificador({ isOpen, onClose, usuarios, usuarioAc
               </div>
 
               {/* COLUMNA DERECHA */}
-              {!isEditing && (
+              {(!isEditing || selectedModulo === 'reunion') && (
                 <div className="flex flex-col space-y-4 lg:pl-6 lg:border-l lg:border-gray-100 dark:lg:border-neutral-800 h-full animate-in fade-in duration-300">
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-2">
