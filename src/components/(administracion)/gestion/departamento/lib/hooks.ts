@@ -2,10 +2,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   getDepartamentos, 
   createDepartamento, 
-  updateDepartamento, 
+  updateDepartamento,
   deleteDepartamento,
   getCandidatosJefatura, 
-  asignarJefeDepartamento
+  asignarJefeDepartamento,
+  swapDepartamentoOrden,
+  shiftDepartamentoOrden
 } from "./action";
 import { DepartamentoFormValues, DepartamentoRow, DepartamentoNode } from "./schemas";
 
@@ -117,6 +119,36 @@ export function useAsignarJefe() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["departamentos"] });
+    }
+  });
+}
+
+export function useSwapDepartamento() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id1, orden1, id2, orden2 }: { id1: string; orden1: number; id2: string; orden2: number }) => {
+      const res = await swapDepartamentoOrden(id1, orden1, id2, orden2);
+      if (res.error) throw new Error(res.error);
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    }
+  });
+}
+
+export function useShiftDepartamento() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, parentId, oldOrden, newOrden }: { id: string; parentId: string | null; oldOrden: number; newOrden: number }) => {
+      const res = await shiftDepartamentoOrden(id, parentId, oldOrden, newOrden);
+      if (res.error) throw new Error(res.error);
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     }
   });
 }
